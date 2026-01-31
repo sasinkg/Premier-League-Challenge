@@ -1,62 +1,69 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { fetchPremierLeagueTable } from "./api/premierLeague";
-import type { StandingsRow } from "./api/premierLeague";
+import type { TeamInfo } from "./api/premierLeague";
 
-// LOCAL LOGOS
-import arsenal from "./assets/logos/Arsenal FC.png";
-import bournemouth from "./assets/logos/AFC Bournemouth.png";
-import astonvilla from "./assets/logos/Aston Villa.png";
-import brentford from "./assets/logos/Brentford FC.png";
-import brighton from "./assets/logos/Brighton & Hove Albion.png";
-import burnley from "./assets/logos/Burnley FC.png";
-import chelsea from "./assets/logos/Chelsea FC.png";
-import crystalpalace from "./assets/logos/Crystal Palace.png";
-import everton from "./assets/logos/Everton FC.png";
-import fulham from "./assets/logos/Fulham FC.png";
-import leeds from "./assets/logos/Leeds United.png";
-import liverpool from "./assets/logos/Liverpool FC.png";
-import mancity from "./assets/logos/Manchester City.png";
-import manutd from "./assets/logos/Manchester United.png";
-import newcastle from "./assets/logos/Newcastle United.png";
-import forest from "./assets/logos/Nottingham Forest.png";
-import sunderland from "./assets/logos/Sunderland AFC.png";
-import spurs from "./assets/logos/Tottenham Hotspur.png";
-import westham from "./assets/logos/West Ham United.png";
-import wolves from "./assets/logos/Wolverhampton Wanderers.png";
+// If you're already using your own initialTeams list, you can keep it.
+// Otherwise we’ll initialize from liveTable when it loads.
 
-const initialTeams = [
-  { name: "Arsenal", logo: arsenal },
-  { name: "AFC Bournemouth", logo: bournemouth },
-  { name: "Aston Villa", logo: astonvilla },
-  { name: "Brentford", logo: brentford },
-  { name: "Brighton & Hove Albion", logo: brighton },
-  { name: "Burnley", logo: burnley },
-  { name: "Chelsea", logo: chelsea },
-  { name: "Crystal Palace", logo: crystalpalace },
-  { name: "Everton", logo: everton },
-  { name: "Fulham", logo: fulham },
-  { name: "Leeds United", logo: leeds },
-  { name: "Liverpool", logo: liverpool },
-  { name: "Manchester City", logo: mancity },
-  { name: "Manchester United", logo: manutd },
-  { name: "Newcastle United", logo: newcastle },
-  { name: "Nottingham Forest", logo: forest },
-  { name: "Sunderland", logo: sunderland },
-  { name: "Tottenham Hotspur", logo: spurs },
-  { name: "West Ham United", logo: westham },
-  { name: "Wolverhampton Wanderers", logo: wolves },
-];
+function PanelHeader({
+  title,
+  subtitle,
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 12,
+        paddingBottom: 12,
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        marginBottom: 12,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>{title}</div>
+        {subtitle && (
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 12,
+              color: "rgba(255,255,255,0.65)",
+            }}
+          >
+            {subtitle}
+          </div>
+        )}
+      </div>
+      {right}
+    </div>
+  );
+}
 
 export default function App() {
-  const [liveTable, setLiveTable] = useState<StandingsRow[] | null>(null);
+  const [liveTable, setLiveTable] = useState<TeamInfo[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
-  const [teams, setTeams] = useState(initialTeams);
 
-  // Fetch live table
+  // User prediction list
+  const [teams, setTeams] = useState<TeamInfo[]>([]);
+
+  const weekLabel = "Week 5";
+  const changesLeft = 1;
+
+  // Fetch dummy "live table" (local list)
   useEffect(() => {
     fetchPremierLeagueTable()
-      .then(setLiveTable)
+      .then((data) => {
+        setLiveTable(data);
+        // Initialize prediction list once (so drag/drop starts with something)
+        setTeams((prev) => (prev.length ? prev : data));
+      })
       .catch((err) => setLiveError(err.message));
   }, []);
 
@@ -68,246 +75,367 @@ export default function App() {
     setTeams(items);
   }
 
+  // Score based on how close your prediction is to "liveTable" order
+  const points = useMemo(() => {
+    if (!liveTable) return 0;
+
+    const liveIndex = new Map<string, number>();
+    liveTable.forEach((t, i) => liveIndex.set(t.name, i));
+
+    let score = 0;
+    teams.forEach((t, i) => {
+      const actual = liveIndex.get(t.name);
+      if (actual === undefined) return;
+      const diff = Math.abs(i - actual);
+      score += Math.max(0, 5 - diff);
+    });
+
+    return score;
+  }, [teams, liveTable]);
+
+  const styles = {
+    page: {
+      minHeight: "100vh",
+      background:
+        "radial-gradient(1200px 600px at 50% -10%, rgba(120,170,255,0.16), transparent 60%), #0b0d10",
+      color: "#fff",
+      fontFamily:
+        'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial',
+      padding: "28px 18px",
+    } as React.CSSProperties,
+
+    board: {
+      maxWidth: 1280,
+      margin: "0 auto",
+      borderRadius: 28,
+      padding: 18,
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
+    } as React.CSSProperties,
+
+    topbar: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 16,
+      padding: "10px 8px 18px",
+    } as React.CSSProperties,
+
+    title: {
+      fontSize: 24,
+      fontWeight: 900,
+      letterSpacing: 0.2,
+    } as React.CSSProperties,
+
+    linkish: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      cursor: "pointer",
+      color: "rgba(255,255,255,0.75)",
+      fontSize: 13,
+      fontWeight: 700,
+      userSelect: "none",
+    } as React.CSSProperties,
+
+    button: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 10,
+      background: "rgba(120,170,255,0.95)",
+      color: "#0b0d10",
+      border: "none",
+      borderRadius: 14,
+      padding: "10px 14px",
+      fontWeight: 900,
+      cursor: "pointer",
+      boxShadow: "0 12px 30px rgba(120,170,255,0.20)",
+    } as React.CSSProperties,
+
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "5fr 2.4fr 5fr",
+      gap: 16,
+      alignItems: "start",
+    } as React.CSSProperties,
+
+    panel: {
+      borderRadius: 22,
+      padding: 16,
+      background: "rgba(10,12,16,0.60)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow: "0 18px 55px rgba(0,0,0,0.45)",
+      backdropFilter: "blur(10px)",
+    } as React.CSSProperties,
+
+    listWrap: {
+      maxHeight: 560,
+      overflow: "auto",
+      borderRadius: 18,
+      border: "1px solid rgba(255,255,255,0.08)",
+      background: "rgba(255,255,255,0.02)",
+    } as React.CSSProperties,
+
+    row: {
+      display: "grid",
+      gridTemplateColumns: "44px 30px 1fr",
+      alignItems: "center",
+      gap: 10,
+      padding: "10px 12px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      fontSize: 14,
+    } as React.CSSProperties,
+
+    dragRow: {
+      display: "grid",
+      gridTemplateColumns: "44px 24px 30px 1fr",
+      alignItems: "center",
+      gap: 10,
+      padding: "10px 12px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      fontSize: 14,
+    } as React.CSSProperties,
+
+    pos: {
+      height: 26,
+      width: 26,
+      borderRadius: 10,
+      display: "grid",
+      placeItems: "center",
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      fontWeight: 900,
+      fontSize: 12,
+    } as React.CSSProperties,
+
+    clubName: {
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      fontWeight: 750,
+    } as React.CSSProperties,
+
+    pill: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "8px 10px",
+      borderRadius: 999,
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      fontVariantNumeric: "tabular-nums",
+      fontSize: 12,
+      fontWeight: 800,
+      color: "rgba(255,255,255,0.78)",
+    } as React.CSSProperties,
+
+    footer: {
+      marginTop: 12,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingTop: 12,
+      borderTop: "1px solid rgba(255,255,255,0.08)",
+      color: "rgba(255,255,255,0.72)",
+      fontSize: 12,
+      fontWeight: 700,
+    } as React.CSSProperties,
+  };
+
   return (
-    <div
-      style={{
-        padding: "40px",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "#111",
-        minHeight: "100vh",
-        color: "#fff",
-      }}
-    >
-      {/* THREE COLUMN LAYOUT */}
-      <div
-        style={{
-          display: "flex",
-          gap: "24px",
-          alignItems: "flex-start",
-          justifyContent: "center",
-        }}
-      >
-        {/* LEFT COLUMN — LIVE TABLE */}
-        <section
-          style={{
-            flex: "0 0 40%",
-            padding: "20px",
-            borderRadius: "16px",
-            background: "#1c1c1c",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.45)",
-          }}
-        >
-          <h2 style={{ marginBottom: "16px", fontSize: "22px" }}>
-            Live Premier League Table
-          </h2>
+    <div style={styles.page}>
+      <div style={styles.board}>
+        {/* TOP BAR */}
+        <div style={styles.topbar}>
+          <div>
+            <div style={styles.title}>
+              Welcome to the Premier League Guessing Game!
+            </div>
+            <div style={{ marginTop: 6 }}>
+              <span
+                style={styles.linkish}
+                onClick={() => alert("Rules modal goes here")}
+                title="Rules"
+              >
+                ⓘ Rules
+              </span>
+            </div>
+          </div>
 
-          {liveError && (
-            <p style={{ color: "salmon" }}>
-              Error loading live table: {liveError}
-            </p>
-          )}
+          <button style={styles.button} onClick={() => alert("Go to Groups")}>
+            👥 View Groups
+          </button>
+        </div>
 
-          {!liveTable && !liveError && <p>Loading…</p>}
+        <div style={styles.grid}>
+          {/* LEFT — LIVE TABLE */}
+          <section style={styles.panel}>
+            <PanelHeader
+              title="Live Table"
+              subtitle={weekLabel}
+              right={<span style={{...styles.pill, background: "#06402F", color:"lime"}}>● Live</span>}
+            />
 
-          {liveTable && (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#222" }}>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Pos</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Club</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liveTable.map((row) => (
-                  <tr
-                    key={row.name}
-                    style={{
-                      background: row.position % 2 ? "#1a1a1a" : "#151515",
-                      borderBottom: "1px solid #2a2a2a",
-                      height: "44px",
-                    }}
-                  >
-                    <td style={{ width: "40px", textAlign: "center" }}>
-                      {row.position}
-                    </td>
-                    <td
-                      style={{
-                        padding: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                      }}
-                    >
-                      <img
-                        src={row.logo}
-                        alt={row.name}
-                        style={{ width: 28, height: 28 }}
-                      />
-                      {row.name}
-                    </td>
-                  </tr>
+            {liveError && (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 14,
+                  border: "1px solid rgba(255,120,120,0.25)",
+                  background: "rgba(255,120,120,0.08)",
+                  color: "rgba(255,180,180,0.95)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                Error loading live table: {liveError}
+              </div>
+            )}
+
+            {!liveTable && !liveError && (
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
+                Loading…
+              </div>
+            )}
+
+            {liveTable && (
+              <div style={styles.listWrap}>
+                {liveTable.map((row, idx) => (
+                  <div key={row.name} style={styles.row}>
+                    <div style={styles.pos}>{idx + 1}</div>
+<img
+  src={row.logo}
+  alt={row.name}
+  style={{
+    width: 26,
+    height: 26,
+    objectFit: "contain",
+  }}
+/>
+
+                    <div style={styles.clubName}>{row.name}</div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+              </div>
+            )}
 
-        {/* MIDDLE COLUMN — TOP SCORERS / ASSISTS */}
-        <aside
-          style={{
-            flex: "0 0 20%",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-          }}
-        >
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "16px",
-              background: "#1c1c1c",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.45)",
-            }}
-          >
-            <h3 style={{ marginBottom: "12px" }}>Top Scorer</h3>
-            <div
-              style={{
-                height: "120px",
-                background: "#222",
-                borderRadius: "12px",
-                marginBottom: "8px",
-              }}
-            ></div>
-            <p>Haaland</p>
-          </div>
+            <div style={styles.footer}>
+              <span style={{ opacity: 0.9 }}>Static (auto-updates weekly)</span>
+              <span style={styles.pill}>Updated: just now</span>
+            </div>
+          </section>
 
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "16px",
-              background: "#1c1c1c",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.45)",
-            }}
-          >
-            <h3 style={{ marginBottom: "12px" }}>2nd Top Scorer</h3>
-            <div
-              style={{
-                height: "120px",
-                background: "#222",
-                borderRadius: "12px",
-                marginBottom: "8px",
-              }}
-            ></div>
-            <p>Salah</p>
-          </div>
+          {/* MIDDLE — STATS */}
+          <aside style={styles.panel}>
+            <PanelHeader title="Leaders" subtitle="(stub for now)" />
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {["Top Scorer", "Top Assists", "Clean Sheets"].map((label) => (
+                <div
+                  key={label}
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 16,
+                    padding: 14,
+                  }}
+                >
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      height: 92,
+                      borderRadius: 14,
+                      background: "rgba(255,255,255,0.04)",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </aside>
 
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "16px",
-              background: "#1c1c1c",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.45)",
-            }}
-          >
-            <h3 style={{ marginBottom: "12px" }}>Top Assists</h3>
-            <div
-              style={{
-                height: "120px",
-                background: "#222",
-                borderRadius: "12px",
-                marginBottom: "8px",
-              }}
-            ></div>
-            <p>Player Name</p>
-          </div>
-        </aside>
+          {/* RIGHT — PREDICTION */}
+          <section style={styles.panel}>
+            <PanelHeader
+              title="Your Prediction"
+              subtitle="Drag to reorder your table"
+              right={
+                <span style={{...styles.pill, background: "#06402F", color:"lime"}}>Changes left: {changesLeft}</span>
+              }
+            />
 
-        {/* RIGHT COLUMN — DRAG + DROP PREDICTION */}
-        <section
-          style={{
-            flex: "0 0 40%",
-            padding: "20px",
-            borderRadius: "16px",
-            background: "#1c1c1c",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.45)",
-          }}
-        >
-          <h2 style={{ marginBottom: "16px", fontSize: "22px" }}>
-            Your Prediction
-          </h2>
-
-          <DragDropContext onDragEnd={handleDrag}>
-            <Droppable droppableId="predicted">
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  <table
-                    style={{ width: "100%", borderCollapse: "collapse" }}
+            <DragDropContext onDragEnd={handleDrag}>
+              <Droppable droppableId="predicted">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={styles.listWrap}
                   >
-                    <thead>
-                      <tr style={{ background: "#222" }}>
-                        <th style={{ padding: "10px", textAlign: "left" }}>
-                          Pos
-                        </th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>
-                          Club
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teams.map((team, index) => (
-                        <Draggable
-                          key={team.name}
-                          draggableId={team.name}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <tr
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
+                    {teams.map((team, index) => (
+                      <Draggable
+                        key={team.name}
+                        draggableId={team.name}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            style={{
+                              ...styles.dragRow,
+                              background: snapshot.isDragging
+                                ? "rgba(120,170,255,0.08)"
+                                : "transparent",
+                              boxShadow: snapshot.isDragging
+                                ? "0 18px 40px rgba(0,0,0,0.50)"
+                                : undefined,
+                              ...provided.draggableProps.style,
+                            }}
+                          >
+                            <div style={styles.pos}>{index + 1}</div>
+
+                            <div
                               {...provided.dragHandleProps}
                               style={{
-                                background: index % 2 ? "#1a1a1a" : "#151515",
-                                borderBottom: "1px solid #2a2a2a",
                                 cursor: "grab",
-                                height: "44px",
-                                ...provided.draggableProps.style,
+                                color: "rgba(255,255,255,0.55)",
+                                fontWeight: 900,
                               }}
+                              title="Drag"
                             >
-                              <td
-                                style={{
-                                  width: "40px",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {index + 1}
-                              </td>
-                              <td
-                                style={{
-                                  padding: "10px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "12px",
-                                }}
-                              >
-                                <img
-                                  src={team.logo}
-                                  alt={team.name}
-                                  style={{ width: 28, height: 28 }}
-                                />
-                                {team.name}
-                              </td>
-                            </tr>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </section>
+                              ≡
+                            </div>
+
+                            <img
+                              src={team.logo}
+                              alt={team.name}
+                              style={{
+                                width: 26,
+                                height: 26,
+                                objectFit: "contain",
+                              }}
+                            />
+                            <div style={styles.clubName}>{team.name}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+
+            <div style={styles.footer}>
+              <span style={styles.pill}>Points: {points}</span>
+              <span style={{ opacity: 0.8 }}>* 1 change per week</span>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

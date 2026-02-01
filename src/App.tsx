@@ -76,22 +76,29 @@ export default function App() {
   }
 
   // Score based on how close your prediction is to "liveTable" order
-  const points = useMemo(() => {
-    if (!liveTable) return 0;
+const points = useMemo(() => {
+  if (!liveTable) return 0;
 
-    const liveIndex = new Map<string, number>();
-    liveTable.forEach((t, i) => liveIndex.set(t.name, i));
+  // Map actual positions
+  const actualPosition = new Map<string, number>();
+  liveTable.forEach((team, index) => {
+    actualPosition.set(team.name, index + 1);
+  });
 
-    let score = 0;
-    teams.forEach((t, i) => {
-      const actual = liveIndex.get(t.name);
-      if (actual === undefined) return;
-      const diff = Math.abs(i - actual);
-      score += Math.max(0, 5 - diff);
-    });
+  let total = 0;
 
-    return score;
-  }, [teams, liveTable]);
+  teams.forEach((team, index) => {
+    const predictedPos = index + 1;
+    const actualPos = actualPosition.get(team.name);
+
+    if (!actualPos) return;
+
+    total += Math.abs(predictedPos - actualPos);
+  });
+
+  return total;
+}, [teams, liveTable]);
+
 
   const styles = {
     page: {
@@ -322,8 +329,8 @@ export default function App() {
             )}
 
             <div style={styles.footer}>
-              <span style={{ opacity: 0.9 }}>Static (auto-updates weekly)</span>
-              <span style={styles.pill}>Updated: just now</span>
+              <span style={{ opacity: 0.9 }}>Auto-updates weekly</span>
+              <span style={{...styles.pill, background: "#06402F", color:"lime"}}>Updated: just now</span>
             </div>
           </section>
 

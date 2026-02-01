@@ -1,0 +1,54 @@
+image: node:20-bullseye
+
+stages:
+  - build
+  - screenshot
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 day
+
+screenshot:
+  stage: screenshot
+  needs: ["build"]
+  before_script:
+    - npm ci
+    # Install browsers + system deps for Playwright
+    - npx playwright install --with-deps chromium
+  script:
+    # Start the built app
+    - npm run preview &
+    - PREVIEW_PID=$!
+    # Take screenshot
+    - mkdir -p docs
+    - SCREENSHOT_URL="http://127.0.0.1:4173/" SCREENSHOT_PATH="docs/ui.png" npm run screenshot
+    # Stop server
+    - kill $PREVIEW_PID || true
+
+    # Commit screenshot back to main if it changed
+    - git config user.email "ci-bot@gitlab.com"
+    - git config user.name "gitlab-ci"
+    - git add docs/ui.png README.md || true
+    - |
+      if git diff --cached --quiet; then
+        echo "No screenshot changes to commit."
+      else
+        git commit -m "chore: update UI screenshot [skip ci]"
+        # Push using CI_JOB_TOKEN
+        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:main
+      fi

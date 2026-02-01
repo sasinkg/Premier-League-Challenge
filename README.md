@@ -5,6 +5,10 @@ Scores are calculated based on **total positional error** — lower scores are b
 
 This project currently uses **local dummy data** for the league table and is built with **Vite** for fast development.
 
+## UI
+
+![Main UI](docs/ui.png)
+
 ---
 
 ## 🧠 How the Game Works

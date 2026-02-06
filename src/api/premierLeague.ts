@@ -5,6 +5,7 @@ export type LiveStanding = {
   name: string;
   logo: string;
 };
+export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const res = await fetch("/football/v4/competitions/PL/standings", {

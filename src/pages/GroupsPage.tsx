@@ -7,6 +7,7 @@ import {
   listMyGroups,
   type GroupSummary,
 } from "../groups/groupsApi";
+import { softDeleteGroup } from "../groups/groupsApi";
 
 type Props = {
   user: User;
@@ -171,12 +172,23 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                       </div>
                     </div>
 
-                    <button
-                      style={styles.button}
-                      onClick={() => onOpenGroup(g)}
-                    >
-                      Open
-                    </button>
+                    <div style={{ display: "flex", gap: 10 }}>
+  <button style={styles.button} onClick={() => onOpenGroup(g)}>
+    Open
+  </button>
+
+  <button
+    style={{ ...styles.button, background: "rgba(255,80,80,0.9)" }}
+    onClick={async () => {
+      if (!confirm(`Delete "${g.name}"?`)) return;
+      await softDeleteGroup(user, g.id);
+      await refresh();
+    }}
+  >
+    Delete
+  </button>
+</div>
+
                   </div>
                 ))}
               </div>

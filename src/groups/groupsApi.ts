@@ -7,6 +7,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
@@ -20,6 +21,7 @@ export type GroupSummary = {
   id: string;
   name: string;
   code: string;
+  deleted?: boolean;
 };
 
 /* =====================
@@ -38,6 +40,7 @@ type UserGroupIndexDoc = {
   name?: string;
   code?: string;
   joinedAt?: unknown;
+  deleted?: boolean;
 };
 
 /* =====================
@@ -89,6 +92,7 @@ export async function createGroup(
     code,
     ownerUid: user.uid,
     createdAt: serverTimestamp(),
+    deleted: false,
   });
 
   // membership record
@@ -99,6 +103,7 @@ export async function createGroup(
       email: user.email ?? "",
       displayName: user.displayName ?? user.email ?? "Unknown",
       joinedAt: serverTimestamp(),
+      deleted: false,
     },
     { merge: true },
   );
@@ -166,16 +171,19 @@ export async function joinGroupByCode(
 
   return { id: groupDocSnap.id, name, code };
 }
+export async function softDeleteGroup(user: User, groupId: string) {
+  await updateDoc(doc(db, "groups", groupId), { deleted: true });
+  await updateDoc(doc(db, "users", user.uid, "groups", groupId), {
+    deleted: true,
+  });
+}
 
 export async function listMyGroups(user: User): Promise<GroupSummary[]> {
-  const snap = await getDocs(
-    collection(db, "users", user.uid, "groups"),
-  );
+  const snap = await getDocs(collection(db, "users", user.uid, "groups"));
 
   return snap.docs
     .map((d) => {
       const data = d.data() as UserGroupIndexDoc;
-
       return {
         id: d.id,
         name:
@@ -183,7 +191,9 @@ export async function listMyGroups(user: User): Promise<GroupSummary[]> {
             ? data.name
             : "Untitled",
         code: typeof data.code === "string" ? data.code : "",
+        deleted: data.deleted === true,
       };
     })
+    .filter((g) => g.deleted !== true)
     .sort((a, b) => a.name.localeCompare(b.name));
 }

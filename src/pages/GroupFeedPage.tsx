@@ -10,6 +10,8 @@ import {
 import { db } from "../firebase";
 import { styles } from "../styles/appStyles";
 import type { GroupSummary } from "../groups/groupsApi";
+import type { TeamInfo } from "../api/premierLeague";
+import { getTodayKey } from "../utils/weekKey";
 
 type Member = {
   uid: string;
@@ -23,12 +25,14 @@ type Props = {
   user: User;
   group: GroupSummary;
   onBack: () => void;
+  teams: TeamInfo[];
 };
 
 export default function GroupFeedPage({ user, group, onBack }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
+  const weekKey = getTodayKey();
 
   async function loadMembers() {
     setLoadingMembers(true);
@@ -61,7 +65,10 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group.id]);
 
-  const owner = useMemo(() => members.find((m) => m.role === "owner") ?? null, [members]);
+  const owner = useMemo(
+    () => members.find((m) => m.role === "owner") ?? null,
+    [members],
+  );
 
   async function copyCode() {
     try {
@@ -79,7 +86,14 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
         <div style={styles.topbar}>
           <div>
             <div style={styles.title}>{group.name}</div>
-            <div style={{ marginTop: 6, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div
+              style={{
+                marginTop: 6,
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
               <span style={styles.linkish} onClick={onBack}>
                 ← Back to Groups
               </span>
@@ -107,11 +121,7 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
         </div>
 
         <div style={{ padding: 16, display: "grid", gap: 16 }}>
-          {msg && (
-            <div style={{ opacity: 0.9 }}>
-              {msg}
-            </div>
-          )}
+          {msg && <div style={{ opacity: 0.9 }}>{msg}</div>}
 
           {/* Members */}
           <div
@@ -122,7 +132,13 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
               background: "rgba(0,0,0,0.25)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
               <div style={{ fontWeight: 800, fontSize: 16 }}>Members</div>
               <button style={styles.button} onClick={loadMembers}>
                 Refresh
@@ -155,7 +171,9 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
                           {m.displayName}
                           {m.uid === user.uid ? " (you)" : ""}
                         </div>
-                        <div style={{ opacity: 0.75, fontSize: 13 }}>{m.email}</div>
+                        <div style={{ opacity: 0.75, fontSize: 13 }}>
+                          {m.email}
+                        </div>
                       </div>
 
                       <div style={{ opacity: 0.75, fontSize: 13 }}>
@@ -179,7 +197,8 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
           >
             <div style={{ fontWeight: 800, fontSize: 16 }}>Group Feed</div>
             <div style={{ marginTop: 8, opacity: 0.8, lineHeight: 1.5 }}>
-              Next we’ll store and display each member’s prediction for the week here.
+              Next we’ll store and display each member’s prediction for the week
+              here.
               <br />
               Planned shape:
               <br />

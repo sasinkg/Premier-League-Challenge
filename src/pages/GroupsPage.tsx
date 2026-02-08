@@ -11,9 +11,10 @@ import {
 type Props = {
   user: User;
   onBack: () => void;
+  onOpenGroup: (group: GroupSummary) => void;
 };
 
-export default function GroupsPage({ user, onBack }: Props) {
+export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
   const [myGroups, setMyGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -172,7 +173,7 @@ export default function GroupsPage({ user, onBack }: Props) {
 
                     <button
                       style={styles.button}
-                      onClick={() => alert(`Open group feed for: ${g.name}`)}
+                      onClick={() => onOpenGroup(g)}
                     >
                       Open
                     </button>

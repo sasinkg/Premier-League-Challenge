@@ -21,7 +21,7 @@ export default function App() {
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<"game" | "groups">("game");
+  const [page, setPage] = useState<"game" | "groups" | "groupFeed">("game");
   const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
 
   // This is what the user drags (name + logo only)
@@ -71,20 +71,30 @@ export default function App() {
     [liveAsTeamInfo, teams],
   );
   if (page === "groupFeed") {
-  if (!user || !activeGroup) {
-    setPage("groups");
-    return null;
-  }
+    // If this happens, it means the user refreshed or state got lost.
+    // Just show groups page instead of setting state during render.
+    if (!user || !activeGroup) {
+      return (
+        <GroupsPage
+          user={user!}
+          onBack={() => setPage("game")}
+          onOpenGroup={(g) => {
+            setActiveGroup(g);
+            setPage("groupFeed");
+          }}
+        />
+      );
+    }
 
-  return (
-    <GroupFeedPage
-      user={user}
-      group={activeGroup}
-      onBack={() => setPage("groups")}
-      teams={teams}
-    />
-  );
-}
+    return (
+      <GroupFeedPage
+        user={user}
+        group={activeGroup}
+        onBack={() => setPage("groups")}
+        teams={teams}
+      />
+    );
+  }
 
   if (page === "groups") {
     if (!user) {
@@ -93,7 +103,16 @@ export default function App() {
       return null;
     }
 
-    return <GroupsPage user={user} onBack={() => setPage("game")} />;
+    return (
+      <GroupsPage
+        user={user}
+        onBack={() => setPage("game")}
+        onOpenGroup={(g) => {
+          setActiveGroup(g);
+          setPage("groupFeed");
+        }}
+      />
+    );
   }
 
   return (

@@ -11,6 +11,7 @@ import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
 import GroupFeedPage from "./pages/GroupFeedPage";
 import type { GroupSummary } from "./groups/groupsApi";
+import type { DropResult } from "@hello-pangea/dnd";
 
 import LiveTablePanel from "./components/LiveTablePanel";
 import LeadersPanel from "./components/LeadersPanel";
@@ -47,7 +48,7 @@ export default function App() {
       });
   }, []);
 
-  function handleDrag(result: any) {
+  function handleDrag(result: DropResult) {
     if (!result.destination) return;
     const items = [...teams];
     const [moved] = items.splice(result.source.index, 1);

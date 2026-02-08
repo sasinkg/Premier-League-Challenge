@@ -20,6 +20,12 @@ type Member = {
   email: string;
   joinedAt?: Timestamp;
 };
+type MemberDoc = {
+  role?: "owner" | "member";
+  displayName?: string;
+  email?: string;
+  joinedAt?: Timestamp;
+};
 
 type Props = {
   user: User;
@@ -41,20 +47,33 @@ export default function GroupFeedPage({ user, group, onBack }: Props) {
         collection(db, "groups", group.id, "members"),
         orderBy("joinedAt", "asc"),
       );
+
       const snap = await getDocs(q);
+
       const list: Member[] = snap.docs.map((d) => {
-        const data = d.data() as any;
+        const data = d.data() as MemberDoc;
+
+        const role: "owner" | "member" =
+          data.role === "owner" || data.role === "member"
+            ? data.role
+            : "member";
+
+        const email = typeof data.email === "string" ? data.email : "";
+        const displayNameRaw =
+          typeof data.displayName === "string" ? data.displayName : "";
+
         return {
           uid: d.id,
-          role: (data.role as "owner" | "member") ?? "member",
-          displayName: String(data.displayName ?? data.email ?? "Unknown"),
-          email: String(data.email ?? ""),
+          role,
+          displayName: displayNameRaw || email || "Unknown",
+          email,
           joinedAt: data.joinedAt,
         };
       });
+
       setMembers(list);
-    } catch (e: any) {
-      setMsg(e?.message ?? "Failed to load members");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed to load members");
     } finally {
       setLoadingMembers(false);
     }

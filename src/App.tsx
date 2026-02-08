@@ -9,6 +9,9 @@ import { computeTotalErrorScore } from "./utils/scoring";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
+import GroupFeedPage from "./pages/GroupFeedPage";
+import type { GroupSummary } from "./groups/groupsApi";
+import type { DropResult } from "@hello-pangea/dnd";
 
 import LiveTablePanel from "./components/LiveTablePanel";
 import LeadersPanel from "./components/LeadersPanel";
@@ -19,7 +22,8 @@ export default function App() {
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<"game" | "groups">("game");
+  const [page, setPage] = useState<"game" | "groups" | "groupFeed">("game");
+  const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
 
   // This is what the user drags (name + logo only)
   const [teams, setTeams] = useState<TeamInfo[]>([]);
@@ -44,7 +48,7 @@ export default function App() {
       });
   }, []);
 
-  function handleDrag(result: any) {
+  function handleDrag(result: DropResult) {
     if (!result.destination) return;
     const items = [...teams];
     const [moved] = items.splice(result.source.index, 1);
@@ -67,6 +71,32 @@ export default function App() {
     () => computeTotalErrorScore(liveAsTeamInfo, teams),
     [liveAsTeamInfo, teams],
   );
+  if (page === "groupFeed") {
+    // If this happens, it means the user refreshed or state got lost.
+    // Just show groups page instead of setting state during render.
+    if (!user || !activeGroup) {
+      return (
+        <GroupsPage
+          user={user!}
+          onBack={() => setPage("game")}
+          onOpenGroup={(g) => {
+            setActiveGroup(g);
+            setPage("groupFeed");
+          }}
+        />
+      );
+    }
+
+    return (
+      <GroupFeedPage
+        user={user}
+        group={activeGroup}
+        onBack={() => setPage("groups")}
+        teams={teams}
+      />
+    );
+  }
+
   if (page === "groups") {
     if (!user) {
       alert("Please sign in to use Groups");
@@ -74,7 +104,16 @@ export default function App() {
       return null;
     }
 
-    return <GroupsPage user={user} onBack={() => setPage("game")} />;
+    return (
+      <GroupsPage
+        user={user}
+        onBack={() => setPage("game")}
+        onOpenGroup={(g) => {
+          setActiveGroup(g);
+          setPage("groupFeed");
+        }}
+      />
+    );
   }
 
   return (

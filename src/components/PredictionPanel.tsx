@@ -2,6 +2,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { TeamInfo } from "../api/premierLeague";
 import PanelHeader from "./PanelHeader";
 import { styles } from "../styles/appStyles";
+import type { DropResult } from "@hello-pangea/dnd";
 
 export default function PredictionPanel({
   teams,
@@ -10,7 +11,7 @@ export default function PredictionPanel({
   points,
 }: {
   teams: TeamInfo[];
-  onDragEnd: (result: any) => void;
+  onDragEnd: (result: DropResult) => void;
   changesLeft: number;
   points: number;
 }) {

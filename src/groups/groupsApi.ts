@@ -34,7 +34,7 @@ export async function createGroup(user: User, nameRaw: string): Promise<GroupSum
   const name = nameRaw.trim();
   if (!name) throw new Error("Group name is required");
 
-  // retry a few times in case of code collision
+  // retry a few times in case of collision
   let code = makeCode(4);
   for (let i = 0; i < 5; i++) {
     // eslint-disable-next-line no-await-in-loop
@@ -52,20 +52,28 @@ export async function createGroup(user: User, nameRaw: string): Promise<GroupSum
   });
 
   // membership record
-  await setDoc(doc(db, "groups", groupRef.id, "members", user.uid), {
-    role: "owner",
-    email: user.email ?? "",
-    displayName: user.displayName ?? user.email ?? "Unknown",
-    joinedAt: serverTimestamp(),
-  });
+  await setDoc(
+    doc(db, "groups", groupRef.id, "members", user.uid),
+    {
+      role: "owner",
+      email: user.email ?? "",
+      displayName: user.displayName ?? user.email ?? "Unknown",
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
   // user -> groups index for fast listing
-  await setDoc(doc(db, "users", user.uid, "groups", groupRef.id), {
-    groupId: groupRef.id,
-    name,
-    code,
-    joinedAt: serverTimestamp(),
-  });
+  await setDoc(
+    doc(db, "users", user.uid, "groups", groupRef.id),
+    {
+      groupId: groupRef.id,
+      name,
+      code,
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
   return { id: groupRef.id, name, code };
 }
@@ -83,19 +91,27 @@ export async function joinGroupByCode(user: User, codeRaw: string): Promise<Grou
 
   const name = String(data.name ?? "Untitled");
 
-  await setDoc(doc(db, "groups", groupDoc.id, "members", user.uid), {
-    role: "member",
-    email: user.email ?? "",
-    displayName: user.displayName ?? user.email ?? "Unknown",
-    joinedAt: serverTimestamp(),
-  });
+  await setDoc(
+    doc(db, "groups", groupDoc.id, "members", user.uid),
+    {
+      role: "member",
+      email: user.email ?? "",
+      displayName: user.displayName ?? user.email ?? "Unknown",
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
-  await setDoc(doc(db, "users", user.uid, "groups", groupDoc.id), {
-    groupId: groupDoc.id,
-    name,
-    code,
-    joinedAt: serverTimestamp(),
-  });
+  await setDoc(
+    doc(db, "users", user.uid, "groups", groupDoc.id),
+    {
+      groupId: groupDoc.id,
+      name,
+      code,
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
   return { id: groupDoc.id, name, code };
 }

@@ -9,6 +9,8 @@ import { computeTotalErrorScore } from "./utils/scoring";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
+import GroupFeedPage from "./pages/GroupFeedPage";
+import type { GroupSummary } from "./groups/groupsApi";
 
 import LiveTablePanel from "./components/LiveTablePanel";
 import LeadersPanel from "./components/LeadersPanel";
@@ -20,6 +22,7 @@ export default function App() {
   const [liveError, setLiveError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<"game" | "groups">("game");
+  const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
 
   // This is what the user drags (name + logo only)
   const [teams, setTeams] = useState<TeamInfo[]>([]);
@@ -67,6 +70,22 @@ export default function App() {
     () => computeTotalErrorScore(liveAsTeamInfo, teams),
     [liveAsTeamInfo, teams],
   );
+  if (page === "groupFeed") {
+  if (!user || !activeGroup) {
+    setPage("groups");
+    return null;
+  }
+
+  return (
+    <GroupFeedPage
+      user={user}
+      group={activeGroup}
+      onBack={() => setPage("groups")}
+      teams={teams}
+    />
+  );
+}
+
   if (page === "groups") {
     if (!user) {
       alert("Please sign in to use Groups");

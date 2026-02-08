@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { styles } from "../styles/appStyles";
-import { createGroup, joinGroupByCode, listMyGroups, type GroupSummary } from "../groups/groupsApi";
+import {
+  createGroup,
+  joinGroupByCode,
+  listMyGroups,
+  type GroupSummary,
+} from "../groups/groupsApi";
 
 type Props = {
   user: User;
@@ -72,15 +77,18 @@ export default function GroupsPage({ user, onBack }: Props) {
         </div>
 
         <div style={{ display: "grid", gap: 16, padding: 16 }}>
-          {msg && (
-            <div style={{ opacity: 0.9 }}>
-              {msg}
-            </div>
-          )}
+          {msg && <div style={{ opacity: 0.9 }}>{msg}</div>}
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 18 }}>Create a group</div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <input
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
@@ -102,10 +110,19 @@ export default function GroupsPage({ user, onBack }: Props) {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 18 }}>Join with code</div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <input
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
+                onChange={(e) =>
+                  setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 placeholder="4-digit code"
                 style={{
                   padding: "10px 12px",
@@ -127,7 +144,9 @@ export default function GroupsPage({ user, onBack }: Props) {
             {loading ? (
               <div style={{ opacity: 0.7 }}>Loading…</div>
             ) : myGroups.length === 0 ? (
-              <div style={{ opacity: 0.7 }}>No groups yet. Create or join one above.</div>
+              <div style={{ opacity: 0.7 }}>
+                No groups yet. Create or join one above.
+              </div>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
                 {myGroups.map((g) => (
@@ -146,7 +165,9 @@ export default function GroupsPage({ user, onBack }: Props) {
                   >
                     <div>
                       <div style={{ fontWeight: 700 }}>{g.name}</div>
-                      <div style={{ opacity: 0.75, fontSize: 13 }}>Code: {g.code}</div>
+                      <div style={{ opacity: 0.75, fontSize: 13 }}>
+                        Code: {g.code}
+                      </div>
                     </div>
 
                     <button

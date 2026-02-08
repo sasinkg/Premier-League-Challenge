@@ -44,8 +44,8 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
       setNewGroupName("");
       setMsg(`Created "${g.name}" (code: ${g.code})`);
       await refresh();
-    } catch (e: any) {
-      setMsg(e?.message ?? "Failed to create group");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed to create group");
     }
   }
 
@@ -56,8 +56,8 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
       setJoinCode("");
       setMsg(`Joined "${g.name}"`);
       await refresh();
-    } catch (e: any) {
-      setMsg(e?.message ?? "Failed to join group");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Failed to join group");
     }
   }
 

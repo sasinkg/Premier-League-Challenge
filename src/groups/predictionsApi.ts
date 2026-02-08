@@ -4,6 +4,7 @@ import {
   getDocs,
   serverTimestamp,
   setDoc,
+  type Timestamp,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "../firebase";
@@ -13,7 +14,7 @@ export type UserPrediction = {
   uid: string;
   displayName: string;
   email: string;
-  submittedAt?: any;
+  submittedAt?: Timestamp;
   teams: TeamInfo[];
 };
 

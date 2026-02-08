@@ -7,10 +7,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1400, height: 800 } });
+  const page = await browser.newPage({
+    viewport: { width: 1400, height: 800 },
+  });
 
   await page.goto(url, { waitUntil: "networkidle" });
-  await sleep(600); // let fonts settle
+  await page.waitForSelector("h1", { timeout: 5000 });
+  await page.waitForTimeout(300);
 
   await page.screenshot({ path: outPath, fullPage: true });
 

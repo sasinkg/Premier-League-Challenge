@@ -117,6 +117,7 @@ export default function App() {
   }
 
   return (
+    
     <div style={styles.page}>
       <div style={styles.board}>
         <div style={styles.topbar}>

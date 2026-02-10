@@ -28,7 +28,19 @@ jobs:
         run: npx playwright install chromium
 
       - name: Screenshot UI
-        run: node scripts/screenshot.mjs
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 &
+          echo $! > /tmp/preview_pid
+          # wait for server
+          for i in {1..30}; do
+            if curl -sSf http://127.0.0.1:4173/ >/dev/null; then
+              echo "Preview is up"
+              break
+            fi
+            sleep 1
+          done
+          mkdir -p docs
+          SCREENSHOT_URL="http://127.0.0.1:4173/" SCREENSHOT_PATH="docs/ui.png" npm run screenshot
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0

@@ -1,0 +1,75 @@
+name: Build + Update UI Screenshot
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  screenshot:
+    # Avoid infinite loop when the workflow commits the screenshot
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 &
+          echo $! > /tmp/preview_pid
+          # wait for server
+          for i in {1..30}; do
+            if curl -sSf http://127.0.0.1:4173/ >/dev/null; then
+              echo "Preview is up"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Take screenshot
+        run: |
+          mkdir -p docs
+          SCREENSHOT_URL="http://127.0.0.1:4173/" SCREENSHOT_PATH="docs/ui.png" npm run screenshot
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f /tmp/preview_pid ]; then
+            kill "$(cat /tmp/preview_pid)" || true
+          fi
+
+      - name: Commit & push screenshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add docs/ui.png README.md || true
+
+          if git diff --cached --quiet; then
+            echo "No screenshot changes."
+            exit 0
+          fi
+
+          git commit -m "chore: update UI screenshot [skip ci]"
+          git push

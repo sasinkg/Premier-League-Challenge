@@ -1,10 +1,8 @@
 name: Build, Screenshot, Deploy
 
 on:
-  pull_request:
   push:
     branches: [main]
-
 
 jobs:
   deploy:
@@ -19,28 +17,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: Build & CI
-        run: npm ci && npm run build
-        env:
-          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Install Playwright
         run: npx playwright install chromium
 
       - name: Screenshot UI
-        run: |
-          npm run preview -- --host 127.0.0.1 --port 4173 &
-          echo $! > /tmp/preview_pid
-          # wait for server
-          for i in {1..30}; do
-            if curl -sSf http://127.0.0.1:4173/ >/dev/null; then
-              echo "Preview is up"
-              break
-            fi
-            sleep 1
-          done
-          mkdir -p docs
-          SCREENSHOT_URL="http://127.0.0.1:4173/" SCREENSHOT_PATH="docs/ui.png" npm run screenshot
+        run: node scripts/screenshot.js
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0

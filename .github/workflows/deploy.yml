@@ -19,11 +19,10 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install deps
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+      - name: Build & CI
+        run: npm ci && npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
 
       - name: Install Playwright
         run: npx playwright install chromium

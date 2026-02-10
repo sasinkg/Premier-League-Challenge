@@ -14,7 +14,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-
+      - run: |
+          echo "API key length: ${#VITE_FIREBASE_API_KEY}"
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
       - run: npm ci && npm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}

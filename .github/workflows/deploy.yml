@@ -28,7 +28,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Screenshot UI
-        run: node scripts/screenshot.js
+        run: node scripts/screenshot.mjs
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0

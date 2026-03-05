@@ -23,13 +23,21 @@ type FootballDataResponse = {
 };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const res = await fetch("/football/v4/competitions/PL/standings", {
+  // Add the base domain here
+  const BASE_URL = "https://api.football-data.org";
+  
+  const res = await fetch(`${BASE_URL}/v4/competitions/PL/standings`, {
     headers: {
       "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,
+      "Content-Type": "application/json", // Good practice to include this
     },
   });
 
-  if (!res.ok) throw new Error("Failed to fetch EPL standings");
+  if (!res.ok) {
+    const errorBody = await res.text();
+    console.error("API Error Response:", errorBody);
+    throw new Error(`Failed to fetch EPL standings: ${res.status}`);
+  }
 
   const data = (await res.json()) as FootballDataResponse;
 

@@ -77,7 +77,7 @@ All backend logic lives outside the frontend `src/` directory. This ensures:
 The backend requires the following environment variable:
 
 ```
-FOOTBALL_API_KEY=your_api_key_here
+VITE_FOOTBALL_API_KEY=your_api_key_here
 ```
 
 Notes:

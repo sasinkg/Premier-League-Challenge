@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   );
 
   const data = await r.json();
-
+  console.log("Token check:", process.env.VITE_FOOTBALL_API_KEY);
   res.status(200).json(
     data.standings[0].table.map((row) => ({
       position: row.position,

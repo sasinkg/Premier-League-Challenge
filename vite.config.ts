@@ -5,11 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/football": {
+      "/api": {
         target: "https://api.football-data.org",
         changeOrigin: true,
         secure: true,
-        rewrite: (path) => path.replace(/^\/football/, ""),
+        rewrite: (path) => path.replace(/^\/api/, "/v4"),
       },
     },
   },

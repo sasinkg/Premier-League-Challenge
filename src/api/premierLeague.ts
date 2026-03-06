@@ -6,6 +6,9 @@ export type LiveStanding = {
   logo: string;
 };
 
+// ADD THIS LINE BACK:
+export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
+
 type FootballDataResponse = {
   standings: Array<{
     table: Array<{
@@ -16,7 +19,6 @@ type FootballDataResponse = {
 };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  // This calls the proxy you just set up in vite.config.ts
   const res = await fetch("/api/competitions/PL/standings", {
     headers: {
       "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,

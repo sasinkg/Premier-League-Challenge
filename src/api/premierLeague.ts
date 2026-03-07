@@ -1,7 +1,4 @@
 // src/api/premierLeague.ts
-
-import type { TableRootProps } from "@chakra-ui/react";
-
 export type LiveStanding = {
   position: number;
   name: string;

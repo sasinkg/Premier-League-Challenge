@@ -19,12 +19,6 @@ interface TableRow {
   team: FootballTeam;
 }
 
-interface StandingsResponse {
-  standings: Array<{
-    table: TableRow[];
-  }>;
-}
-
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY as string;
   const TARGET = "https://api.football-data.org/v4/competitions/PL/standings";
@@ -44,7 +38,7 @@ export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   }
 
   const data = await res.json();
-  return data.standings[0].table.map((row: any) => ({
+  return data.standings[0].table.map((row: TableRow) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

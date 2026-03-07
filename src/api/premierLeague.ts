@@ -26,34 +26,25 @@ interface StandingsResponse {
 }
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
   const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY as string;
+  const TARGET = "https://api.football-data.org/v4/competitions/PL/standings";
   
-  // We use the 'get' endpoint because it wraps the response in a JSON object,
-  // which helps bypass the browser's immediate CORS "preflight" block.
-  const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}`;
+  // This proxy is specifically built to allow headers
+  const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
 
-  const res = await fetch(PROXY_URL, {
-    // Note: Some public proxies strip headers. If this fails, the API returns a 403.
+  const res = await fetch(`${PROXY_URL}${TARGET}`, {
     headers: {
       "X-Auth-Token": API_KEY,
     },
   });
 
-  if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
-
-  const wrapper = await res.json();
-  
-  // AllOrigins returns a string in 'contents', we parse it into our typed interface
-  const data: StandingsResponse = JSON.parse(wrapper.contents);
-
-  // Defensive check to avoid the "reading '0' of undefined" error
-  if (!data.standings || data.standings.length === 0) {
-    throw new Error("No standings data found in API response");
+  if (!res.ok) {
+    if (res.status === 403) throw new Error("Please visit https://cors-anywhere.herokuapp.com/corsdemo and click 'Request access'");
+    throw new Error(`API Error: ${res.status}`);
   }
 
-  // No more 'any'! TypeScript now knows exactly what 'row' is.
-  return data.standings[0].table.map((row: TableRow) => ({
+  const data = await res.json();
+  return data.standings[0].table.map((row: any) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

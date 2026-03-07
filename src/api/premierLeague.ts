@@ -12,17 +12,17 @@ export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 // const BASE_URL = import.meta.env.DEV 
 //   ? '/api' 
 //   : (import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4');
-const FOOTBALL_API_URL = "https://api.football-data.org/v4/competitions/PL/standings";
-const PROXY_PREFIX = "https://corsproxy.io/?url=";
+// const FOOTBALL_API_URL = "https://api.football-data.org/v4/competitions/PL/standings";
+// const PROXY_PREFIX = "https://corsproxy.io/?url=";
 
-type FootballDataResponse = {
-  standings: Array<{
-    table: Array<{
-      position: number;
-      team: { name: string; crest: string };
-    }>;
-  }>;
-};
+// type FootballDataResponse = {
+//   standings: Array<{
+//     table: Array<{
+//       position: number;
+//       team: { name: string; crest: string };
+//     }>;
+//   }>;
+// };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";

@@ -8,7 +8,9 @@ export type LiveStanding = {
 
 // ADD THIS LINE BACK:
 export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
-
+const BASE_URL = import.meta.env.DEV 
+  ? '/api' 
+  : (import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4');
 type FootballDataResponse = {
   standings: Array<{
     table: Array<{
@@ -20,7 +22,7 @@ type FootballDataResponse = {
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   // Use the proxy path locally, but the direct URL in production
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4';
+  // const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4';
   
   const res = await fetch(`${BASE_URL}/competitions/PL/standings`, {
     headers: {

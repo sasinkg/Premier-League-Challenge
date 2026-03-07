@@ -1,5 +1,7 @@
 // src/api/premierLeague.ts
 
+import type { TableRootProps } from "@chakra-ui/react";
+
 export type LiveStanding = {
   position: number;
   name: string;
@@ -20,24 +22,13 @@ interface TableRow {
 }
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY as string;
-  const TARGET = "https://api.football-data.org/v4/competitions/PL/standings";
-  
-  // This proxy is specifically built to allow headers
-  const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
+  // No proxy, no headers, no secrets needed in the browser!
+  const res = await fetch("/standings.json");
 
-  const res = await fetch(`${PROXY_URL}${TARGET}`, {
-    headers: {
-      "X-Auth-Token": API_KEY,
-    },
-  });
-
-  if (!res.ok) {
-    if (res.status === 403) throw new Error("Please visit https://cors-anywhere.herokuapp.com/corsdemo and click 'Request access'");
-    throw new Error(`API Error: ${res.status}`);
-  }
+  if (!res.ok) throw new Error("Could not load standings data");
 
   const data = await res.json();
+
   return data.standings[0].table.map((row: TableRow) => ({
     position: row.position,
     name: row.team.name,

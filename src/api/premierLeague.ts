@@ -23,13 +23,13 @@ export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 //     }>;
 //   }>;
 // };
-// interface TableEntry {
-//   position: number;
-//   team: {
-//     name: string;
-//     crest: string;
-//   };
-// }
+interface TableEntry {
+  position: number;
+  team: {
+    name: string;
+    crest: string;
+  };
+}
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY as string;
   const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
@@ -52,7 +52,7 @@ export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
     throw new Error("Standings data missing from API response");
   }
 
-  return data.standings[0].table.map((row: any) => ({
+  return data.standings[0].table.map((row: TableEntry) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

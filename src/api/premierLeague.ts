@@ -39,10 +39,22 @@ export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
 
   const wrapper = await res.json();
   
-  // 2. This line MUST be here to turn the string into an object
-  const data = JSON.parse(wrapper.contents);
+  // LOG IT: This will show up in your browser console
+  console.log("AllOrigins Wrapper:", wrapper);
 
-  // 3. Now 'data' has the 'standings' property the API sent back
+  if (!wrapper.contents) {
+    throw new Error("Proxy returned empty contents");
+  }
+
+  const data = JSON.parse(wrapper.contents);
+  console.log("Parsed Football Data:", data);
+
+  // DEFENSIVE CHECK: Make sure standings exists before touching [0]
+  if (!data.standings || !data.standings[0]) {
+    console.error("Standings missing in data:", data);
+    throw new Error("API response format recognized but standings are missing");
+  }
+
   return data.standings[0].table.map((row: TableEntry) => ({
     position: row.position,
     name: row.team.name,

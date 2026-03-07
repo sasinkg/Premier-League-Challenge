@@ -23,7 +23,13 @@ export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 //     }>;
 //   }>;
 // };
-
+interface TableEntry {
+  position: number;
+  team: {
+    name: string;
+    crest: string;
+  };
+}
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
   
@@ -40,7 +46,7 @@ export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const data = JSON.parse(wrapper.contents);
 
   // Map the data using your existing logic
-  return data.standings[0].table.map((row: any) => ({
+  return data.standings[0].table.map((row: TableEntry) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

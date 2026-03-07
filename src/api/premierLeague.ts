@@ -32,20 +32,17 @@ interface TableEntry {
 }
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
   const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
-  
-  // AllOrigins wraps the request to prevent the 'preflight' handshake from failing
   const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}`;
 
   const res = await fetch(PROXY_URL);
-  
   if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
 
   const wrapper = await res.json();
   
-  // AllOrigins returns the data as a string in 'contents', so we parse it manually
+  // 2. This line MUST be here to turn the string into an object
   const data = JSON.parse(wrapper.contents);
 
-  // Map the data using your existing logic
+  // 3. Now 'data' has the 'standings' property the API sent back
   return data.standings[0].table.map((row: TableEntry) => ({
     position: row.position,
     name: row.team.name,

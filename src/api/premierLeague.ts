@@ -1,5 +1,4 @@
 // src/api/premierLeague.ts
-
 export type LiveStanding = {
   position: number;
   name: string;
@@ -8,28 +7,26 @@ export type LiveStanding = {
 
 // ADD THIS LINE BACK:
 export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
+// 1. Define the interfaces to satisfy the 'no-explicit-any' rule
+interface FootballTeam {
+  name: string;
+  crest: string;
+}
 
-type FootballDataResponse = {
-  standings: Array<{
-    table: Array<{
-      position: number;
-      team: { name: string; crest: string };
-    }>;
-  }>;
-};
+interface TableRow {
+  position: number;
+  team: FootballTeam;
+}
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const res = await fetch("/api/competitions/PL/standings", {
-    headers: {
-      "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,
-    },
-  });
+  // No proxy, no headers, no secrets needed in the browser!
+  const res = await fetch("/standings.json");
 
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  if (!res.ok) throw new Error("Could not load standings data");
 
-  const data: FootballDataResponse = await res.json();
+  const data = await res.json();
 
-  return data.standings[0].table.map((row) => ({
+  return data.standings[0].table.map((row: TableRow) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

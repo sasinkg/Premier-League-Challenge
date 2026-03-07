@@ -9,7 +9,7 @@
     "rewrites": [
       {
         "source": "/api/**",
-        "destination": "https://api.football-data.org/:splat"
+        "destination": "https://api.football-data.org/v4/:splat"
       },
       {
         "source": "**",

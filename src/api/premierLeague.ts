@@ -5,6 +5,9 @@ export type LiveStanding = {
   name: string;
   logo: string;
 };
+
+// ADD THIS LINE BACK:
+export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 // 1. Define the interfaces to satisfy the 'no-explicit-any' rule
 interface FootballTeam {
   name: string;

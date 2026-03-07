@@ -14,7 +14,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-
+      - name: Verify Env
+        run: |
+          if [ -z "$VITE_FIREBASE_API_KEY" ]; then echo "KEY IS MISSING"; else echo "KEY IS PRESENT"; fi
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          
       - name: Build
         run: npm ci && npm run build
         env:
@@ -33,3 +38,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PREMIER_LEAGUE_CHALLENGE }}
           channelId: live
           projectId: premier-league-challenge
+      

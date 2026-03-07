@@ -25,27 +25,22 @@ type FootballDataResponse = {
 };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  // Use the proxy on the live site to bypass CORS, but use your local /api proxy in dev
-  const fetchUrl = import.meta.env.DEV 
-    ? "/api/competitions/PL/standings" 
-    : `${PROXY_PREFIX}${encodeURIComponent(FOOTBALL_API_URL)}`;
+  const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
+  
+  // AllOrigins wraps the request to prevent the 'preflight' handshake from failing
+  const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}`;
 
-  const res = await fetch(fetchUrl, {
-    headers: {
-      "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,
-    },
-  });
+  const res = await fetch(PROXY_URL);
+  
+  if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
 
-  if (!res.ok) {
-    // This helps us see if the proxy or the API is failing
-    const errorText = await res.text();
-    console.error("Fetch failed:", errorText);
-    throw new Error(`API Error: ${res.status}`);
-  }
+  const wrapper = await res.json();
+  
+  // AllOrigins returns the data as a string in 'contents', so we parse it manually
+  const data = JSON.parse(wrapper.contents);
 
-  const data: FootballDataResponse = await res.json();
-
-  return data.standings[0].table.map((row) => ({
+  // Map the data using your existing logic
+  return data.standings[0].table.map((row: any) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

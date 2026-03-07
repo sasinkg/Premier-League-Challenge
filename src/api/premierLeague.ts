@@ -19,7 +19,10 @@ type FootballDataResponse = {
 };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const res = await fetch("/api/competitions/PL/standings", {
+  // Use the proxy path locally, but the direct URL in production
+  const baseUrl = import.meta.env.DEV ? '/api' : 'https://api.football-data.org/v4';
+  
+  const res = await fetch(`${baseUrl}/competitions/PL/standings`, {
     headers: {
       "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,
     },

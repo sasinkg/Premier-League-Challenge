@@ -8,10 +8,6 @@
     ],
     "rewrites": [
       {
-        "source": "/api/**",
-        "destination": "https://api.football-data.org/v4/:splat"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

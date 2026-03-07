@@ -31,31 +31,28 @@ interface TableEntry {
   };
 }
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
+  const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY as string;
   const TARGET_URL = "https://api.football-data.org/v4/competitions/PL/standings";
-  const PROXY_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}`;
-
-  const res = await fetch(PROXY_URL);
-  if (!res.ok) throw new Error(`Proxy Error: ${res.status}`);
-
-  const wrapper = await res.json();
   
-  // LOG IT: This will show up in your browser console
-  console.log("AllOrigins Wrapper:", wrapper);
+  // 1. Switch from /get to /raw
+  // 2. We don't need JSON.parse(wrapper.contents) anymore with /raw
+  const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(TARGET_URL)}`;
 
-  if (!wrapper.contents) {
-    throw new Error("Proxy returned empty contents");
-  }
+  const res = await fetch(PROXY_URL, {
+    headers: {
+      "X-Auth-Token": API_KEY,
+    },
+  });
 
-  const data = JSON.parse(wrapper.contents);
-  console.log("Parsed Football Data:", data);
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
 
-  // DEFENSIVE CHECK: Make sure standings exists before touching [0]
+  const data = await res.json();
+
   if (!data.standings || !data.standings[0]) {
-    console.error("Standings missing in data:", data);
-    throw new Error("API response format recognized but standings are missing");
+    throw new Error("Standings data missing from API response");
   }
 
-  return data.standings[0].table.map((row: TableEntry) => ({
+  return data.standings[0].table.map((row: any) => ({
     position: row.position,
     name: row.team.name,
     logo: row.team.crest,

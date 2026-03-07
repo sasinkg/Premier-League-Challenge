@@ -9,9 +9,9 @@ export type LiveStanding = {
 // ADD THIS LINE BACK:
 export type TeamInfo = Pick<LiveStanding, "name" | "logo">;
 // VARS
-const BASE_URL = import.meta.env.DEV 
-  ? '/api' 
-  : (import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4');
+// const BASE_URL = import.meta.env.DEV 
+//   ? '/api' 
+//   : (import.meta.env.VITE_API_BASE_URL || 'https://api.football-data.org/v4');
 const FOOTBALL_API_URL = "https://api.football-data.org/v4/competitions/PL/standings";
 const PROXY_PREFIX = "https://corsproxy.io/?url=";
 

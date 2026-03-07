@@ -19,7 +19,7 @@ type FootballDataResponse = {
 };
 
 export async function fetchPremierLeagueOrder(): Promise<LiveStanding[]> {
-  const res = await fetch("/api/v4/competitions/PL/standings", {
+  const res = await fetch("/api/competitions/PL/standings", {
     headers: {
       "X-Auth-Token": import.meta.env.VITE_FOOTBALL_API_KEY as string,
     },

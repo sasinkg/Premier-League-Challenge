@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   fetchPremierLeagueOrder,
   type LiveStanding,
@@ -39,10 +39,6 @@ export default function App() {
     seasonActive ? localStorage.getItem(dragStorageKey) === "1" : false,
   );
 
-  // Keep storage key ref stable across renders
-  const dragStorageKeyRef = useRef(dragStorageKey);
-  dragStorageKeyRef.current = dragStorageKey;
-
   const weekLabel = "Live";
   const changesLeft = seasonActive ? (hasUsedDrag ? 0 : 1) : 1;
   const canDrag = !seasonActive || !hasUsedDrag;
@@ -73,7 +69,7 @@ export default function App() {
     setTeams(items);
     if (seasonActive) {
       setHasUsedDrag(true);
-      localStorage.setItem(dragStorageKeyRef.current, "1");
+      localStorage.setItem(dragStorageKey, "1");
     }
   }
 

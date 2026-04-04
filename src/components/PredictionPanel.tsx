@@ -8,21 +8,33 @@ export default function PredictionPanel({
   teams,
   onDragEnd,
   changesLeft,
+  canDrag,
   points,
+  onSubmit,
 }: {
   teams: TeamInfo[];
   onDragEnd: (result: DropResult) => void;
   changesLeft: number;
+  canDrag: boolean;
   points: number;
+  onSubmit?: () => void;
 }) {
   return (
     <section style={styles.panel}>
       <PanelHeader
         title="Your Prediction"
-        subtitle="Drag to reorder your table"
+        subtitle={
+          canDrag
+            ? "Drag one team to reorder your table"
+            : "No changes left this week"
+        }
         right={
           <span
-            style={{ ...styles.pill, background: "#06402F", color: "lime" }}
+            style={{
+              ...styles.pill,
+              background: changesLeft > 0 ? "#06402F" : "rgba(255,60,60,0.15)",
+              color: changesLeft > 0 ? "lime" : "rgba(255,100,100,0.9)",
+            }}
           >
             Changes left: {changesLeft}
           </span>
@@ -35,13 +47,18 @@ export default function PredictionPanel({
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              style={styles.listWrap}
+              style={{
+                ...styles.listWrap,
+                opacity: canDrag ? 1 : 0.6,
+                pointerEvents: canDrag ? undefined : "none",
+              }}
             >
               {teams.map((team, index) => (
                 <Draggable
                   key={team.name}
                   draggableId={team.name}
                   index={index}
+                  isDragDisabled={!canDrag}
                 >
                   {(provided, snapshot) => (
                     <div
@@ -63,11 +80,13 @@ export default function PredictionPanel({
                       <div
                         {...provided.dragHandleProps}
                         style={{
-                          cursor: "grab",
-                          color: "rgba(255,255,255,0.55)",
+                          cursor: canDrag ? "grab" : "not-allowed",
+                          color: canDrag
+                            ? "rgba(255,255,255,0.55)"
+                            : "rgba(255,255,255,0.2)",
                           fontWeight: 900,
                         }}
-                        title="Drag"
+                        title={canDrag ? "Drag" : "No changes left this week"}
                       >
                         ≡
                       </div>
@@ -88,6 +107,24 @@ export default function PredictionPanel({
           )}
         </Droppable>
       </DragDropContext>
+
+      {onSubmit && (
+        <button
+          onClick={onSubmit}
+          style={{
+            ...styles.button,
+            width: "100%",
+            marginTop: 12,
+            padding: "14px 20px",
+            fontSize: 15,
+            borderRadius: 16,
+            justifyContent: "center",
+            boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+          }}
+        >
+          Submit Prediction to Group
+        </button>
+      )}
 
       <div style={styles.footer}>
         <span style={styles.pill}>Score (lower wins): {points}</span>

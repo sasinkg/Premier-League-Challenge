@@ -11,7 +11,7 @@ import { db } from "../firebase";
 import { styles } from "../styles/appStyles";
 import type { GroupSummary } from "../groups/groupsApi";
 import type { TeamInfo } from "../api/premierLeague";
-import { getTodayKey } from "../utils/weekKey";
+import { getWeekKey } from "../utils/weekKey";
 import {
   saveMyPrediction,
   listPredictionsForWeek,
@@ -54,7 +54,7 @@ export default function GroupFeedPage({
   const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const weekKey = getTodayKey();
+  const weekKey = getWeekKey();
 
   async function loadMembers() {
     setLoadingMembers(true);
@@ -206,15 +206,24 @@ export default function GroupFeedPage({
               Week of {weekKey} — submits your current predicted table order
             </div>
             <button
-              style={styles.button}
+              style={{
+                ...styles.button,
+                width: "100%",
+                padding: "16px 20px",
+                fontSize: 16,
+                borderRadius: 16,
+                justifyContent: "center",
+                boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+                opacity: submitting ? 0.6 : 1,
+              }}
               onClick={handleSubmit}
               disabled={submitting}
             >
               {submitting
                 ? "Submitting…"
                 : myPrediction
-                  ? "Update prediction"
-                  : "Submit prediction"}
+                  ? "Update My Prediction"
+                  : "Submit My Prediction"}
             </button>
           </div>
 

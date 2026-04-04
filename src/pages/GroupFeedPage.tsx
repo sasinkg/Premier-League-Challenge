@@ -11,13 +11,63 @@ import { db } from "../firebase";
 import { styles } from "../styles/appStyles";
 import type { GroupSummary } from "../groups/groupsApi";
 import type { TeamInfo } from "../api/premierLeague";
-import { getTodayKey } from "../utils/weekKey";
+import { getWeekKey } from "../utils/weekKey";
 import {
   saveMyPrediction,
   listPredictionsForWeek,
   type UserPrediction,
 } from "../groups/predictionsApi";
 import { computeTotalErrorScore } from "../utils/scoring";
+
+function getTeamDelta(
+  liveTable: TeamInfo[],
+  teamName: string,
+  predictedPos: number,
+): number | null {
+  const actualPos = liveTable.findIndex((t) => t.name === teamName);
+  if (actualPos === -1) return null;
+  return actualPos + 1 - predictedPos;
+  // positive → team LOWER than predicted (▼)
+  // negative → team HIGHER than predicted (▲)
+  // zero     → exact match (✓)
+}
+
+function getPositionBadgeStyle(error: number): {
+  background: string;
+  border: string;
+} {
+  if (error === 0)
+    return {
+      background: "rgba(255,255,255,0.08)",
+      border: "1px solid rgba(255,255,255,0.10)",
+    };
+  if (error <= 2)
+    return {
+      background: "rgba(251,191,36,0.28)",
+      border: "1px solid rgba(251,191,36,0.45)",
+    };
+  if (error <= 5)
+    return {
+      background: "rgba(249,115,22,0.28)",
+      border: "1px solid rgba(249,115,22,0.45)",
+    };
+  return {
+    background: "rgba(239,68,68,0.28)",
+    border: "1px solid rgba(239,68,68,0.45)",
+  };
+}
+
+function formatDelta(delta: number): string {
+  if (delta === 0) return "✓";
+  if (delta < 0) return `▲${Math.abs(delta)}`;
+  return `▼${delta}`;
+}
+
+function getDeltaColor(delta: number): string {
+  if (delta === 0) return "rgba(120,255,160,0.90)";
+  if (delta < 0) return "rgba(120,200,255,0.90)";
+  return "rgba(255,120,120,0.90)";
+}
 
 type Member = {
   uid: string;
@@ -54,7 +104,7 @@ export default function GroupFeedPage({
   const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const weekKey = getTodayKey();
+  const weekKey = getWeekKey();
 
   async function loadMembers() {
     setLoadingMembers(true);
@@ -206,15 +256,24 @@ export default function GroupFeedPage({
               Week of {weekKey} — submits your current predicted table order
             </div>
             <button
-              style={styles.button}
+              style={{
+                ...styles.button,
+                width: "100%",
+                padding: "16px 20px",
+                fontSize: 16,
+                borderRadius: 16,
+                justifyContent: "center",
+                boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+                opacity: submitting ? 0.6 : 1,
+              }}
               onClick={handleSubmit}
               disabled={submitting}
             >
               {submitting
                 ? "Submitting…"
                 : myPrediction
-                  ? "Update prediction"
-                  : "Submit prediction"}
+                  ? "Update My Prediction"
+                  : "Submit My Prediction"}
             </button>
           </div>
 
@@ -314,32 +373,88 @@ export default function GroupFeedPage({
                         style={{
                           display: "grid",
                           gridTemplateColumns:
-                            "repeat(auto-fill, minmax(140px, 1fr))",
+                            "repeat(auto-fill, minmax(160px, 1fr))",
                           gap: 4,
                         }}
                       >
-                        {pred.teams.map((team, pos) => (
-                          <div
-                            key={team.name}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              fontSize: 12,
-                              opacity: 0.85,
-                            }}
-                          >
-                            <span style={{ opacity: 0.5, minWidth: 16 }}>
-                              {pos + 1}.
-                            </span>
-                            <img
-                              src={team.logo}
-                              alt={team.name}
-                              style={{ width: 16, height: 16, objectFit: "contain" }}
-                            />
-                            <span>{team.name}</span>
-                          </div>
-                        ))}
+                        {pred.teams.map((team, pos) => {
+                          const predictedPos = pos + 1;
+                          const delta = liveTable
+                            ? getTeamDelta(liveTable, team.name, predictedPos)
+                            : null;
+                          const error = delta !== null ? Math.abs(delta) : 0;
+                          const badgeStyle =
+                            delta !== null
+                              ? getPositionBadgeStyle(error)
+                              : null;
+
+                          return (
+                            <div
+                              key={team.name}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                                fontSize: 12,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  minWidth: 18,
+                                  height: 18,
+                                  borderRadius: 5,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: 800,
+                                  fontSize: 11,
+                                  flexShrink: 0,
+                                  background: badgeStyle
+                                    ? badgeStyle.background
+                                    : "rgba(255,255,255,0.06)",
+                                  border: badgeStyle
+                                    ? badgeStyle.border
+                                    : "1px solid rgba(255,255,255,0.10)",
+                                }}
+                              >
+                                {predictedPos}
+                              </span>
+                              <img
+                                src={team.logo}
+                                alt={team.name}
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  objectFit: "contain",
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  opacity: 0.85,
+                                  flex: 1,
+                                }}
+                              >
+                                {team.name}
+                              </span>
+                              {delta !== null && (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 800,
+                                    color: getDeltaColor(delta),
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {formatDelta(delta)}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );

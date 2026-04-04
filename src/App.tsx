@@ -17,6 +17,9 @@ import LiveTablePanel from "./components/LiveTablePanel";
 import LeadersPanel from "./components/LeadersPanel";
 import PredictionPanel from "./components/PredictionPanel";
 import { signInWithGoogle, logOut } from "./auth/auth";
+import { getWeekKey } from "./utils/weekKey";
+
+const SEASON_START = new Date("2025-08-15");
 
 export default function App() {
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
@@ -28,8 +31,18 @@ export default function App() {
   // This is what the user drags (name + logo only)
   const [teams, setTeams] = useState<TeamInfo[]>([]);
 
+  const weekKey = getWeekKey();
+  const seasonActive = new Date() >= SEASON_START;
+  const dragStorageKey = `plc_dragged_${weekKey}`;
+
+  const [hasUsedDrag, setHasUsedDrag] = useState(() =>
+    seasonActive ? localStorage.getItem(dragStorageKey) === "1" : false,
+  );
+  const [teamsBeforeDrag, setTeamsBeforeDrag] = useState<TeamInfo[] | null>(null);
+
   const weekLabel = "Live";
-  const changesLeft = 1;
+  const changesLeft = seasonActive ? (hasUsedDrag ? 0 : 1) : 1;
+  const canDrag = !seasonActive || !hasUsedDrag;
 
   useEffect(() => {
     fetchPremierLeagueOrder()
@@ -50,10 +63,24 @@ export default function App() {
 
   function handleDrag(result: DropResult) {
     if (!result.destination) return;
+    if (!canDrag) return;
+    setTeamsBeforeDrag([...teams]);
     const items = [...teams];
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
     setTeams(items);
+    if (seasonActive) {
+      setHasUsedDrag(true);
+      localStorage.setItem(dragStorageKey, "1");
+    }
+  }
+
+  function handleRevert() {
+    if (!teamsBeforeDrag) return;
+    setTeams(teamsBeforeDrag);
+    setTeamsBeforeDrag(null);
+    setHasUsedDrag(false);
+    localStorage.removeItem(dragStorageKey);
   }
 
   useEffect(() => {
@@ -171,9 +198,20 @@ export default function App() {
           <LeadersPanel />
           <PredictionPanel
             teams={teams}
+            liveTable={liveAsTeamInfo}
             onDragEnd={handleDrag}
             changesLeft={changesLeft}
+            canDrag={canDrag}
             points={points}
+            onRevert={teamsBeforeDrag ? handleRevert : undefined}
+            onSubmit={() => {
+              if (!user) {
+                alert("Sign in to submit a prediction.");
+              } else {
+                setTeamsBeforeDrag(null);
+                setPage("groups");
+              }
+            }}
           />
         </div>
       </div>

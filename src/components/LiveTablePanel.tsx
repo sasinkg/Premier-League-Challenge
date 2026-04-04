@@ -47,17 +47,40 @@ export default function LiveTablePanel({
 
       {liveTable && (
         <div style={styles.listWrap}>
-          {liveTable.map((row, idx) => (
-            <div key={row.name} style={styles.row}>
-              <div style={styles.pos}>{idx + 1}</div>
-              <img
-                src={row.logo}
-                alt={row.name}
-                style={{ width: 26, height: 26, objectFit: "contain" }}
-              />
-              <div style={styles.clubName}>{row.name}</div>
-            </div>
-          ))}
+          {liveTable.map((row, idx) => {
+            const pos = idx + 1;
+            const highlight =
+              pos <= 4 ? "rgba(80,140,255,0.08)" :
+              pos === 5 ? "rgba(255,140,30,0.08)" :
+              pos === 6 ? "rgba(50,200,100,0.08)" :
+              pos >= 18  ? "rgba(255,60,60,0.08)" :
+              "transparent";
+            const accentColor =
+              pos <= 4 ? "rgba(80,140,255,0.7)" :
+              pos === 5 ? "rgba(255,140,30,0.7)" :
+              pos === 6 ? "rgba(50,200,100,0.7)" :
+              pos >= 18  ? "rgba(255,60,60,0.7)" :
+              "transparent";
+
+            return (
+              <div
+                key={row.name}
+                style={{
+                  ...styles.row,
+                  background: highlight,
+                  borderLeft: `3px solid ${accentColor}`,
+                }}
+              >
+                <div style={styles.pos}>{pos}</div>
+                <img
+                  src={row.logo}
+                  alt={row.name}
+                  style={{ width: 26, height: 26, objectFit: "contain" }}
+                />
+                <div style={styles.clubName}>{row.name}</div>
+              </div>
+            );
+          })}
         </div>
       )}
 

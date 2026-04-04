@@ -3,13 +3,12 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   schedule:
-    - cron: '0 0 * * *' # Runs nightly at midnight UTC
+    - cron: '0 0 * * *' # Nightly standings refresh
 
 jobs:
-  build_deploy:
+  deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,52 +18,17 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Validate Environment Variables
-        run: |
-          echo "Checking required environment variables..."
-          # List of all variables required for the build
-          vars=(
-            "VITE_FOOTBALL_API_KEY" 
-            "VITE_API_BASE_URL" 
-            "VITE_FIREBASE_API_KEY" 
-            "VITE_FIREBASE_AUTH_DOMAIN" 
-            "VITE_FIREBASE_PROJECT_ID"
-          )
-          
-          missing=0
-          for var in "${vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "❌ $var is MISSING"
-              missing=$((missing + 1))
-            else
-              echo "✅ $var is present"
-            fi
-          done
-
-          if [ $missing -gt 0 ]; then
-            echo "Error: $missing required environment variables are missing in GitHub Settings!"
-            exit 1
-          fi
-        env:
-          # Mapping both Secrets and Vars for the check
-          VITE_FOOTBALL_API_KEY: ${{ secrets.VITE_FOOTBALL_API_KEY }}
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
-
       - name: Fetch Standings
         run: |
           curl --fail \
             -H "X-Auth-Token: ${{ secrets.VITE_FOOTBALL_API_KEY }}" \
             https://api.football-data.org/v4/competitions/PL/standings \
             -o public/standings.json
-          echo "standings.json size: $(wc -c < public/standings.json) bytes"
+          echo "standings.json: $(wc -c < public/standings.json) bytes"
 
       - name: Build
         run: npm ci && npm run build
         env:
-          # These MUST match what your code (premierLeague.ts & firebase.ts) expects
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_FOOTBALL_API_KEY: ${{ secrets.VITE_FOOTBALL_API_KEY }}
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -74,7 +38,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
 
-      - name: Deploy to Firebase Hosting (live)
+      - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

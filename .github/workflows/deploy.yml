@@ -51,6 +51,12 @@ jobs:
           VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
 
+      - name: Fetch Standings
+        run: |
+          curl -H "X-Auth-Token: ${{ secrets.VITE_FOOTBALL_API_KEY }}" \
+          https://api.football-data.org/v4/competitions/PL/standings \
+          -o public/standings.json
+
       - name: Build
         run: npm ci && npm run build
         env:

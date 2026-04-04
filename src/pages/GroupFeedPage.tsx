@@ -8,7 +8,7 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { styles } from "../styles/appStyles";
+import { getStyles } from "../styles/appStyles";
 import type { GroupSummary } from "../groups/groupsApi";
 import type { TeamInfo } from "../api/premierLeague";
 import { getWeekKey } from "../utils/weekKey";
@@ -18,6 +18,7 @@ import {
   type UserPrediction,
 } from "../groups/predictionsApi";
 import { computeTotalErrorScore } from "../utils/scoring";
+import { useTheme } from "../context/ThemeContext";
 
 function getTeamDelta(
   liveTable: TeamInfo[],
@@ -32,14 +33,16 @@ function getTeamDelta(
   // zero     → exact match (✓)
 }
 
-function getPositionBadgeStyle(error: number): {
-  background: string;
-  border: string;
-} {
+function getPositionBadgeStyle(
+  error: number,
+  dark: boolean,
+): { background: string; border: string } {
   if (error === 0)
     return {
-      background: "rgba(255,255,255,0.08)",
-      border: "1px solid rgba(255,255,255,0.10)",
+      background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+      border: dark
+        ? "1px solid rgba(255,255,255,0.10)"
+        : "1px solid rgba(0,0,0,0.10)",
     };
   if (error <= 2)
     return {
@@ -98,6 +101,9 @@ export default function GroupFeedPage({
   teams,
   liveTable,
 }: Props) {
+  const { dark } = useTheme();
+  const styles = getStyles(dark);
+
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [predictions, setPredictions] = useState<UserPrediction[]>([]);
@@ -200,6 +206,13 @@ export default function GroupFeedPage({
     }
   }
 
+  const sectionCard = {
+    padding: 12,
+    borderRadius: 16,
+    border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)",
+    background: dark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.80)",
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.board}>
@@ -241,14 +254,7 @@ export default function GroupFeedPage({
           {msg && <div style={{ opacity: 0.9 }}>{msg}</div>}
 
           {/* Submit prediction */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.25)",
-            }}
-          >
+          <div style={sectionCard}>
             <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 10 }}>
               {myPrediction ? "Update My Prediction" : "Post My Prediction"}
             </div>
@@ -278,14 +284,7 @@ export default function GroupFeedPage({
           </div>
 
           {/* Group leaderboard / predictions feed */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.25)",
-            }}
-          >
+          <div style={sectionCard}>
             <div
               style={{
                 display: "flex",
@@ -323,11 +322,19 @@ export default function GroupFeedPage({
                         padding: "10px 12px",
                         borderRadius: 12,
                         border: isMe
-                          ? "1px solid rgba(255,255,255,0.35)"
-                          : "1px solid rgba(255,255,255,0.10)",
+                          ? dark
+                            ? "1px solid rgba(255,255,255,0.35)"
+                            : "1px solid rgba(0,0,0,0.25)"
+                          : dark
+                            ? "1px solid rgba(255,255,255,0.10)"
+                            : "1px solid rgba(0,0,0,0.08)",
                         background: isMe
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(0,0,0,0.15)",
+                          ? dark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(120,170,255,0.10)"
+                          : dark
+                            ? "rgba(0,0,0,0.15)"
+                            : "rgba(0,0,0,0.02)",
                       }}
                     >
                       {/* Header row */}
@@ -385,7 +392,7 @@ export default function GroupFeedPage({
                           const error = delta !== null ? Math.abs(delta) : 0;
                           const badgeStyle =
                             delta !== null
-                              ? getPositionBadgeStyle(error)
+                              ? getPositionBadgeStyle(error, dark)
                               : null;
 
                           return (
@@ -411,10 +418,14 @@ export default function GroupFeedPage({
                                   flexShrink: 0,
                                   background: badgeStyle
                                     ? badgeStyle.background
-                                    : "rgba(255,255,255,0.06)",
+                                    : dark
+                                      ? "rgba(255,255,255,0.06)"
+                                      : "rgba(0,0,0,0.06)",
                                   border: badgeStyle
                                     ? badgeStyle.border
-                                    : "1px solid rgba(255,255,255,0.10)",
+                                    : dark
+                                      ? "1px solid rgba(255,255,255,0.10)"
+                                      : "1px solid rgba(0,0,0,0.10)",
                                 }}
                               >
                                 {predictedPos}
@@ -464,14 +475,7 @@ export default function GroupFeedPage({
           </div>
 
           {/* Members */}
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.25)",
-            }}
-          >
+          <div style={sectionCard}>
             <div
               style={{
                 display: "flex",
@@ -502,8 +506,12 @@ export default function GroupFeedPage({
                         gap: 12,
                         padding: "8px 10px",
                         borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        background: "rgba(0,0,0,0.15)",
+                        border: dark
+                          ? "1px solid rgba(255,255,255,0.10)"
+                          : "1px solid rgba(0,0,0,0.08)",
+                        background: dark
+                          ? "rgba(0,0,0,0.15)"
+                          : "rgba(0,0,0,0.02)",
                       }}
                     >
                       <div style={{ display: "grid" }}>

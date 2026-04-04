@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { styles } from "../styles/appStyles";
+import { getStyles } from "../styles/appStyles";
 import {
   createGroup,
   joinGroupByCode,
@@ -8,6 +8,7 @@ import {
   type GroupSummary,
 } from "../groups/groupsApi";
 import { softDeleteGroup } from "../groups/groupsApi";
+import { useTheme } from "../context/ThemeContext";
 
 type Props = {
   user: User;
@@ -16,6 +17,9 @@ type Props = {
 };
 
 export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
+  const { dark } = useTheme();
+  const styles = getStyles(dark);
+
   const [myGroups, setMyGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,6 +66,21 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
     }
   }
 
+  const inputStyle = {
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: dark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.15)",
+    background: dark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.95)",
+    color: dark ? "white" : "#0b0d10",
+  };
+
+  const cardStyle = {
+    padding: 12,
+    borderRadius: 16,
+    border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.10)",
+    background: dark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.80)",
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.board}>
@@ -95,14 +114,7 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
                 placeholder="Group name"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "rgba(0,0,0,0.2)",
-                  color: "white",
-                  minWidth: 260,
-                }}
+                style={{ ...inputStyle, minWidth: 260 }}
               />
               <button style={styles.button} onClick={onCreate}>
                 Create
@@ -126,14 +138,7 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                   setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder="4-digit code"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "rgba(0,0,0,0.2)",
-                  color: "white",
-                  minWidth: 180,
-                }}
+                style={{ ...inputStyle, minWidth: 180 }}
               />
               <button style={styles.button} onClick={onJoin}>
                 Join
@@ -155,10 +160,7 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                   <div
                     key={g.id}
                     style={{
-                      padding: 12,
-                      borderRadius: 16,
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      background: "rgba(0,0,0,0.25)",
+                      ...cardStyle,
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -173,22 +175,21 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                     </div>
 
                     <div style={{ display: "flex", gap: 10 }}>
-  <button style={styles.button} onClick={() => onOpenGroup(g)}>
-    Open
-  </button>
+                      <button style={styles.button} onClick={() => onOpenGroup(g)}>
+                        Open
+                      </button>
 
-  <button
-    style={{ ...styles.button, background: "rgba(255,80,80,0.9)" }}
-    onClick={async () => {
-      if (!confirm(`Delete "${g.name}"?`)) return;
-      await softDeleteGroup(user, g.id);
-      await refresh();
-    }}
-  >
-    Delete
-  </button>
-</div>
-
+                      <button
+                        style={{ ...styles.button, background: "rgba(255,80,80,0.9)" }}
+                        onClick={async () => {
+                          if (!confirm(`Delete "${g.name}"?`)) return;
+                          await softDeleteGroup(user, g.id);
+                          await refresh();
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

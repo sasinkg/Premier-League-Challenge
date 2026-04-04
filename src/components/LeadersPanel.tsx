@@ -1,7 +1,11 @@
 import PanelHeader from "./PanelHeader";
-import { styles } from "../styles/appStyles";
+import { getStyles } from "../styles/appStyles";
+import { useTheme } from "../context/ThemeContext";
 
 export default function LeadersPanel() {
+  const { dark } = useTheme();
+  const styles = getStyles(dark);
+
   return (
     <aside style={styles.panel}>
       <PanelHeader title="Leaders" subtitle="(stub for now)" />
@@ -10,13 +14,20 @@ export default function LeadersPanel() {
           <div
             key={label}
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+              border: dark
+                ? "1px solid rgba(255,255,255,0.08)"
+                : "1px solid rgba(0,0,0,0.08)",
               borderRadius: 16,
               padding: 14,
             }}
           >
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: dark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+              }}
+            >
               {label}
             </div>
             <div
@@ -24,7 +35,9 @@ export default function LeadersPanel() {
                 marginTop: 8,
                 height: 92,
                 borderRadius: 14,
-                background: "rgba(255,255,255,0.04)",
+                background: dark
+                  ? "rgba(255,255,255,0.04)"
+                  : "rgba(0,0,0,0.04)",
               }}
             />
           </div>

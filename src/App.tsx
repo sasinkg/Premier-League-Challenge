@@ -4,7 +4,7 @@ import {
   type LiveStanding,
 } from "./api/premierLeague";
 import type { TeamInfo } from "./api/premierLeague";
-import { styles } from "./styles/appStyles";
+import { getStyles } from "./styles/appStyles";
 import { computeTotalErrorScore } from "./utils/scoring";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "./firebase";
@@ -18,10 +18,14 @@ import LeadersPanel from "./components/LeadersPanel";
 import PredictionPanel from "./components/PredictionPanel";
 import { signInWithGoogle, logOut } from "./auth/auth";
 import { getWeekKey } from "./utils/weekKey";
+import { useTheme } from "./context/ThemeContext";
 
 const SEASON_START = new Date("2025-08-15");
 
 export default function App() {
+  const { dark, toggleTheme } = useTheme();
+  const styles = getStyles(dark);
+
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -168,6 +172,10 @@ export default function App() {
           </button>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button style={styles.themeToggle} onClick={toggleTheme}>
+              {dark ? "Light mode" : "Dark mode"}
+            </button>
+
             {user ? (
               <>
                 <span style={{ opacity: 0.9 }}>Signed in as: {user.email}</span>

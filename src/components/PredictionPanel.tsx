@@ -1,8 +1,9 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { TeamInfo } from "../api/premierLeague";
 import PanelHeader from "./PanelHeader";
-import { styles } from "../styles/appStyles";
+import { getStyles } from "../styles/appStyles";
 import type { DropResult } from "@hello-pangea/dnd";
+import { useTheme } from "../context/ThemeContext";
 
 function getTeamDelta(
   liveTable: TeamInfo[],
@@ -14,14 +15,16 @@ function getTeamDelta(
   return actualPos + 1 - predictedPos;
 }
 
-function getPositionBadgeStyle(error: number): {
-  background: string;
-  border: string;
-} {
+function getPositionBadgeStyle(
+  error: number,
+  dark: boolean,
+): { background: string; border: string } {
   if (error === 0)
     return {
-      background: "rgba(255,255,255,0.08)",
-      border: "1px solid rgba(255,255,255,0.10)",
+      background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+      border: dark
+        ? "1px solid rgba(255,255,255,0.10)"
+        : "1px solid rgba(0,0,0,0.10)",
     };
   if (error <= 2)
     return {
@@ -70,6 +73,9 @@ export default function PredictionPanel({
   onRevert?: () => void;
   onSubmit?: () => void;
 }) {
+  const { dark } = useTheme();
+  const styles = getStyles(dark);
+
   return (
     <section style={styles.panel}>
       <PanelHeader
@@ -111,7 +117,7 @@ export default function PredictionPanel({
                   : null;
                 const error = delta !== null ? Math.abs(delta) : 0;
                 const badgeStyle =
-                  delta !== null ? getPositionBadgeStyle(error) : null;
+                  delta !== null ? getPositionBadgeStyle(error, dark) : null;
 
                 return (
                   <Draggable
@@ -128,10 +134,10 @@ export default function PredictionPanel({
                           ...styles.dragRow,
                           gridTemplateColumns: "44px 24px 30px 1fr auto",
                           background: snapshot.isDragging
-                            ? "rgba(120,170,255,0.08)"
+                            ? "rgba(120,170,255,0.10)"
                             : "transparent",
                           boxShadow: snapshot.isDragging
-                            ? "0 18px 40px rgba(0,0,0,0.50)"
+                            ? "0 18px 40px rgba(0,0,0,0.30)"
                             : undefined,
                           ...provided.draggableProps.style,
                         }}
@@ -155,8 +161,12 @@ export default function PredictionPanel({
                           style={{
                             cursor: canDrag ? "grab" : "not-allowed",
                             color: canDrag
-                              ? "rgba(255,255,255,0.55)"
-                              : "rgba(255,255,255,0.2)",
+                              ? dark
+                                ? "rgba(255,255,255,0.55)"
+                                : "rgba(0,0,0,0.40)"
+                              : dark
+                                ? "rgba(255,255,255,0.20)"
+                                : "rgba(0,0,0,0.20)",
                             fontWeight: 900,
                           }}
                           title={
@@ -182,7 +192,10 @@ export default function PredictionPanel({
                           style={{
                             fontSize: 11,
                             fontWeight: 800,
-                            color: delta !== null ? getDeltaColor(delta) : "transparent",
+                            color:
+                              delta !== null
+                                ? getDeltaColor(delta)
+                                : "transparent",
                             textAlign: "right",
                             paddingRight: 2,
                           }}
@@ -207,8 +220,8 @@ export default function PredictionPanel({
               onClick={onRevert}
               style={{
                 ...styles.button,
-                background: "rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.85)",
+                background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                color: dark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)",
                 boxShadow: "none",
                 padding: "14px 16px",
                 borderRadius: 16,

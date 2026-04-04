@@ -38,6 +38,7 @@ export default function App() {
   const [hasUsedDrag, setHasUsedDrag] = useState(() =>
     seasonActive ? localStorage.getItem(dragStorageKey) === "1" : false,
   );
+  const [teamsBeforeDrag, setTeamsBeforeDrag] = useState<TeamInfo[] | null>(null);
 
   const weekLabel = "Live";
   const changesLeft = seasonActive ? (hasUsedDrag ? 0 : 1) : 1;
@@ -63,6 +64,7 @@ export default function App() {
   function handleDrag(result: DropResult) {
     if (!result.destination) return;
     if (!canDrag) return;
+    setTeamsBeforeDrag([...teams]);
     const items = [...teams];
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
@@ -71,6 +73,14 @@ export default function App() {
       setHasUsedDrag(true);
       localStorage.setItem(dragStorageKey, "1");
     }
+  }
+
+  function handleRevert() {
+    if (!teamsBeforeDrag) return;
+    setTeams(teamsBeforeDrag);
+    setTeamsBeforeDrag(null);
+    setHasUsedDrag(false);
+    localStorage.removeItem(dragStorageKey);
   }
 
   useEffect(() => {
@@ -188,10 +198,20 @@ export default function App() {
           <LeadersPanel />
           <PredictionPanel
             teams={teams}
+            liveTable={liveAsTeamInfo}
             onDragEnd={handleDrag}
             changesLeft={changesLeft}
             canDrag={canDrag}
             points={points}
+            onRevert={teamsBeforeDrag ? handleRevert : undefined}
+            onSubmit={() => {
+              if (!user) {
+                alert("Sign in to submit a prediction.");
+              } else {
+                setTeamsBeforeDrag(null);
+                setPage("groups");
+              }
+            }}
           />
         </div>
       </div>

@@ -93,6 +93,7 @@ export default function App() {
         group={activeGroup}
         onBack={() => setPage("groups")}
         teams={teams}
+        liveTable={liveAsTeamInfo}
       />
     );
   }

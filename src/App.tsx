@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useWindowWidth } from "./hooks/useWindowWidth";
 import {
   fetchPremierLeagueOrder,
   type LiveStanding,
@@ -62,7 +63,8 @@ const TIEBREAKER_UNLOCK = new Date("2026-06-30");
 
 export default function App() {
   const { dark, toggleTheme } = useTheme();
-  const styles = getStyles(dark);
+  const isMobile = useWindowWidth() < 768;
+  const styles = getStyles(dark, isMobile);
 
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
@@ -196,6 +198,38 @@ export default function App() {
     );
   }
 
+  const settingsDropdown = settingsOpen && (
+    <>
+      <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setSettingsOpen(false)} />
+      <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100, background: dark ? "#1a1a2e" : "#fff", border: dark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.12)", borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", minWidth: 180 }}>
+        <button onClick={() => { toggleTheme(); setSettingsOpen(false); }} style={dropdownItem(dark)}>
+          {dark ? "☀️" : "🌙"} {dark ? "Light mode" : "Dark mode"}
+        </button>
+        {user
+          ? <button onClick={() => { logOut(); setSettingsOpen(false); }} style={{ ...dropdownItem(dark), color: "rgba(255,100,100,0.9)" }}>🚪 Log out</button>
+          : <button onClick={() => { signInWithGoogle().catch(e => alert(e.message)); setSettingsOpen(false); }} style={dropdownItem(dark)}>🔑 Sign in</button>
+        }
+      </div>
+    </>
+  );
+
+  const iconButtons = (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <button onClick={() => setShowRules(true)} title="Rules" style={iconBtn(dark)}>ⓘ</button>
+      <button onClick={() => setPage("groups")} title="Groups" style={iconBtn(dark)}>👥</button>
+      <div style={{ position: "relative" }}>
+        <button
+          onClick={() => setSettingsOpen(o => !o)}
+          title="Settings"
+          style={{ ...iconBtn(dark), background: settingsOpen ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)") : iconBtn(dark).background }}
+        >
+          ⚙️
+        </button>
+        {settingsDropdown}
+      </div>
+    </div>
+  );
+
   return (
     <div key="game" className="page-enter" style={styles.page}>
       {showRules && (
@@ -205,78 +239,43 @@ export default function App() {
         }} />
       )}
       <div style={styles.board}>
-        <div style={{ ...styles.topbar, display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
-          {/* Left: title */}
-          <div>
+        <div style={{
+          ...styles.topbar,
+          display: isMobile ? "flex" : "grid",
+          gridTemplateColumns: isMobile ? undefined : "1fr auto 1fr",
+          flexDirection: isMobile ? "column" : undefined,
+          gap: isMobile ? 12 : 16,
+          alignItems: isMobile ? "stretch" : "center",
+        }}>
+          {/* Title row — on mobile also contains icon buttons */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={styles.title}>⚽</div>
+            {isMobile && iconButtons}
           </div>
 
-          {/* Center: Score */}
+          {/* Score — centered */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
             <div style={{ fontSize: 11, opacity: 0.45, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase" }}>Your Score</div>
             <div style={{
               background: dark ? "rgba(120,170,255,0.12)" : "rgba(80,120,255,0.10)",
               border: dark ? "1px solid rgba(120,170,255,0.25)" : "1px solid rgba(80,120,255,0.20)",
               borderRadius: 16,
-              padding: "8px 32px",
+              padding: isMobile ? "6px 24px" : "8px 32px",
               lineHeight: 1,
+              width: isMobile ? "100%" : undefined,
+              textAlign: "center",
+              boxSizing: "border-box",
             }}>
-              <span style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.03em" }}>{points}</span>
+              <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 900, letterSpacing: "-0.03em" }}>{points}</span>
             </div>
           </div>
 
-          {/* Right: icon buttons */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-
-            {/* Rules */}
-            <button onClick={() => setShowRules(true)} title="Rules" style={iconBtn(dark)}>ⓘ</button>
-
-            {/* Groups */}
-            <button onClick={() => setPage("groups")} title="Groups" style={iconBtn(dark)}>👥</button>
-
-            {/* Settings */}
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={() => setSettingsOpen(o => !o)}
-                title="Settings"
-                style={{ ...iconBtn(dark), background: settingsOpen ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)") : iconBtn(dark).background }}
-              >
-                ⚙️
-              </button>
-
-              {settingsOpen && (
-                <>
-                  <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setSettingsOpen(false)} />
-                  <div style={{
-                    position: "absolute",
-                    top: "calc(100% + 8px)",
-                    right: 0,
-                    zIndex: 100,
-                    background: dark ? "#1a1a2e" : "#fff",
-                    border: dark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.12)",
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-                    minWidth: 180,
-                  }}>
-                    <button onClick={() => { toggleTheme(); setSettingsOpen(false); }} style={dropdownItem(dark)}>
-                      {dark ? "☀️" : "🌙"} {dark ? "Light mode" : "Dark mode"}
-                    </button>
-                    {user ? (
-                      <button onClick={() => { logOut(); setSettingsOpen(false); }} style={{ ...dropdownItem(dark), color: "rgba(255,100,100,0.9)" }}>
-                        🚪 Log out
-                      </button>
-                    ) : (
-                      <button onClick={() => { signInWithGoogle().catch(e => alert(e.message)); setSettingsOpen(false); }} style={dropdownItem(dark)}>
-                        🔑 Sign in
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
+          {/* Desktop icon buttons */}
+          {!isMobile && (
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              {iconButtons}
             </div>
-
-          </div>
+          )}
         </div>
 
         <div style={styles.grid}>

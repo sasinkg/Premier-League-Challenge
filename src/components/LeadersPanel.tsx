@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useWindowWidth } from "../hooks/useWindowWidth";
 import PanelHeader from "./PanelHeader";
 import { getStyles } from "../styles/appStyles";
 import { useTheme } from "../context/ThemeContext";
@@ -206,7 +207,10 @@ function LiveLeader({ player, stat, suffix }: { player: PlayerStat | null; stat:
 
 export default function LeadersPanel({ players, tiebreakers, locked, onTiebreakerChange }: Props) {
   const { dark } = useTheme();
-  const styles = getStyles(dark);
+  const isMobile = useWindowWidth() < 768;
+  const styles = getStyles(dark, isMobile);
+  const [collapsed, setCollapsed] = useState(false);
+  const isCollapsed = isMobile && collapsed;
 
   const topScorer = players.length > 0 ? [...players].sort((a, b) => b.goals - a.goals)[0] : null;
   const topAssister = players.length > 0 ? [...players].sort((a, b) => b.assists - a.assists)[0] : null;
@@ -222,8 +226,13 @@ export default function LeadersPanel({ players, tiebreakers, locked, onTiebreake
 
   return (
     <aside style={styles.panel}>
-      <PanelHeader title="Leaders" subtitle="−2 pts each if correct" />
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <PanelHeader
+        title="Leaders"
+        subtitle="−2 pts each if correct"
+        onToggle={isMobile ? () => setCollapsed(c => !c) : undefined}
+        collapsed={isCollapsed}
+      />
+      {!isCollapsed && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
         <div style={cardStyle}>
           <div style={{ fontSize: 11, opacity: 0.55, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -283,7 +292,7 @@ export default function LeadersPanel({ players, tiebreakers, locked, onTiebreake
           )}
         </div>
 
-      </div>
+      </div>}
     </aside>
   );
 }

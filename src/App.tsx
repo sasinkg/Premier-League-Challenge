@@ -151,31 +151,30 @@ export default function App() {
     [liveAsTeamInfo, teams],
   );
   if (page === "groupFeed") {
-    // If this happens, it means the user refreshed or state got lost.
-    // Just show groups page instead of setting state during render.
     if (!user || !activeGroup) {
       return (
-        <GroupsPage
-          user={user!}
-          onBack={() => setPage("game")}
-          onOpenGroup={(g) => {
-            setActiveGroup(g);
-            setPage("groupFeed");
-          }}
-        />
+        <div key="groups" className="page-enter">
+          <GroupsPage
+            user={user!}
+            onBack={() => setPage("game")}
+            onOpenGroup={(g) => { setActiveGroup(g); setPage("groupFeed"); }}
+          />
+        </div>
       );
     }
 
     return (
-      <GroupFeedPage
-        user={user}
-        group={activeGroup}
-        onBack={() => setPage("groups")}
-        teams={teams}
-        liveTable={liveAsTeamInfo}
-        leaders={leaders}
-        tiebreakers={tiebreakers}
-      />
+      <div key="groupFeed" className="page-enter">
+        <GroupFeedPage
+          user={user}
+          group={activeGroup}
+          onBack={() => setPage("groups")}
+          teams={teams}
+          liveTable={liveAsTeamInfo}
+          leaders={leaders}
+          tiebreakers={tiebreakers}
+        />
+      </div>
     );
   }
 
@@ -187,19 +186,18 @@ export default function App() {
     }
 
     return (
-      <GroupsPage
-        user={user}
-        onBack={() => setPage("game")}
-        onOpenGroup={(g) => {
-          setActiveGroup(g);
-          setPage("groupFeed");
-        }}
-      />
+      <div key="groups" className="page-enter">
+        <GroupsPage
+          user={user}
+          onBack={() => setPage("game")}
+          onOpenGroup={(g) => { setActiveGroup(g); setPage("groupFeed"); }}
+        />
+      </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div key="game" className="page-enter" style={styles.page}>
       {showRules && (
         <RulesModal onClose={() => {
           localStorage.setItem("plc_rules_seen", "1");

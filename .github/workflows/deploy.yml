@@ -26,6 +26,14 @@ jobs:
             -o public/standings.json
           echo "standings.json: $(wc -c < public/standings.json) bytes"
 
+      - name: Fetch Scorers
+        run: |
+          curl --fail \
+            -H "X-Auth-Token: ${{ secrets.VITE_FOOTBALL_API_KEY }}" \
+            "https://api.football-data.org/v4/competitions/PL/scorers?limit=50" \
+            -o public/scorers.json
+          echo "scorers.json: $(wc -c < public/scorers.json) bytes"
+
       - name: Build
         run: npm ci && npm run build
         env:

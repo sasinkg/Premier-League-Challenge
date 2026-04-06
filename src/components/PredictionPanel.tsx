@@ -60,7 +60,6 @@ export default function PredictionPanel({
   onDragEnd,
   changesLeft,
   canDrag,
-  points,
   onRevert,
   onSubmit,
 }: {
@@ -69,7 +68,6 @@ export default function PredictionPanel({
   onDragEnd: (result: DropResult) => void;
   changesLeft: number;
   canDrag: boolean;
-  points: number;
   onRevert?: () => void;
   onSubmit?: () => void;
 }) {
@@ -251,8 +249,7 @@ export default function PredictionPanel({
       )}
 
       <div style={styles.footer}>
-        <span style={styles.pill}>Score (lower wins): {points}</span>
-        <span style={{ opacity: 0.8 }}>* 1 change per week</span>
+        <span style={{ opacity: 0.6, fontSize: 12 }}>* 1 change per week</span>
       </div>
     </section>
   );

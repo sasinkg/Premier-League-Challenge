@@ -1,4 +1,18 @@
 import type { TeamInfo } from "../api/premierLeague";
+import type { PlayerStat } from "../api/leaders";
+
+export function computeTiebreakerBonus(
+  players: PlayerStat[],
+  tiebreakers?: { topScorer?: string; topAssister?: string }
+): number {
+  if (!tiebreakers || players.length === 0) return 0;
+  const topScorer = [...players].sort((a, b) => b.goals - a.goals)[0];
+  const topAssister = [...players].sort((a, b) => b.assists - a.assists)[0];
+  let bonus = 0;
+  if (tiebreakers.topScorer && topScorer?.name === tiebreakers.topScorer) bonus -= 2;
+  if (tiebreakers.topAssister && topAssister?.name === tiebreakers.topAssister) bonus -= 2;
+  return bonus;
+}
 
 export function computeTotalErrorScore(
   liveTable: TeamInfo[] | null,

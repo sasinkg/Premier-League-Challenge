@@ -60,17 +60,6 @@ function getPositionBadgeStyle(
   };
 }
 
-function formatDelta(delta: number): string {
-  if (delta === 0) return "✓";
-  if (delta < 0) return `▲${Math.abs(delta)}`;
-  return `▼${delta}`;
-}
-
-function getDeltaColor(delta: number): string {
-  if (delta === 0) return "rgba(120,255,160,0.90)";
-  if (delta < 0) return "rgba(120,200,255,0.90)";
-  return "rgba(255,120,120,0.90)";
-}
 
 type Member = {
   uid: string;

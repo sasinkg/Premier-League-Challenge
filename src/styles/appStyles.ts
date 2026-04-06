@@ -1,6 +1,6 @@
 import type React from "react";
 
-export function getStyles(dark: boolean) {
+export function getStyles(dark: boolean, isMobile = false) {
   const border = dark
     ? "1px solid rgba(255,255,255,0.08)"
     : "1px solid rgba(0,0,0,0.08)";
@@ -17,7 +17,7 @@ export function getStyles(dark: boolean) {
       color: dark ? "#fff" : "#0b0d10",
       fontFamily:
         'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial',
-      padding: "28px 18px",
+      padding: isMobile ? "16px 12px" : "28px 18px",
     } as React.CSSProperties,
 
     board: {
@@ -83,14 +83,14 @@ export function getStyles(dark: boolean) {
 
     grid: {
       display: "grid",
-      gridTemplateColumns: "5fr 2.4fr 5fr",
-      gap: 16,
+      gridTemplateColumns: isMobile ? "1fr" : "5fr 2.4fr 5fr",
+      gap: isMobile ? 12 : 16,
       alignItems: "start",
     } as React.CSSProperties,
 
     panel: {
-      borderRadius: 22,
-      padding: 16,
+      borderRadius: isMobile ? 16 : 22,
+      padding: isMobile ? 12 : 16,
       background: dark ? "rgba(10,12,16,0.60)" : "rgba(255,255,255,0.92)",
       border,
       boxShadow: dark
@@ -100,7 +100,7 @@ export function getStyles(dark: boolean) {
     } as React.CSSProperties,
 
     listWrap: {
-      maxHeight: 560,
+      maxHeight: isMobile ? "55vh" : 560,
       overflow: "auto",
       borderRadius: 18,
       border,

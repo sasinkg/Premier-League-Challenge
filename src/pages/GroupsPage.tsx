@@ -9,6 +9,7 @@ import {
 } from "../groups/groupsApi";
 import { softDeleteGroup } from "../groups/groupsApi";
 import { useTheme } from "../context/ThemeContext";
+import { useWindowWidth } from "../hooks/useWindowWidth";
 
 type Props = {
   user: User;
@@ -18,7 +19,8 @@ type Props = {
 
 export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
   const { dark } = useTheme();
-  const styles = getStyles(dark);
+  const isMobile = useWindowWidth() < 768;
+  const styles = getStyles(dark, isMobile);
 
   const [myGroups, setMyGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);

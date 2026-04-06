@@ -4,6 +4,7 @@ import PanelHeader from "./PanelHeader";
 import { getStyles } from "../styles/appStyles";
 import type { DropResult } from "@hello-pangea/dnd";
 import { useTheme } from "../context/ThemeContext";
+import { useWindowWidth } from "../hooks/useWindowWidth";
 
 function getTeamDelta(
   liveTable: TeamInfo[],
@@ -72,7 +73,8 @@ export default function PredictionPanel({
   onSubmit?: () => void;
 }) {
   const { dark } = useTheme();
-  const styles = getStyles(dark);
+  const isMobile = useWindowWidth() < 768;
+  const styles = getStyles(dark, isMobile);
 
   return (
     <section style={styles.panel}>
@@ -105,7 +107,6 @@ export default function PredictionPanel({
               style={{
                 ...styles.listWrap,
                 opacity: canDrag ? 1 : 0.6,
-                pointerEvents: canDrag ? undefined : "none",
               }}
             >
               {teams.map((team, index) => {

@@ -21,6 +21,7 @@ import {
 import { computeTotalErrorScore, computeTiebreakerBonus } from "../utils/scoring";
 import type { PlayerStat } from "../api/leaders";
 import { useTheme } from "../context/ThemeContext";
+import { useWindowWidth } from "../hooks/useWindowWidth";
 
 function getTeamDelta(
   liveTable: TeamInfo[],
@@ -97,7 +98,8 @@ export default function GroupFeedPage({
   tiebreakers,
 }: Props) {
   const { dark } = useTheme();
-  const styles = getStyles(dark);
+  const isMobile = useWindowWidth() < 768;
+  const styles = getStyles(dark, isMobile);
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
@@ -227,38 +229,22 @@ export default function GroupFeedPage({
         }
       `}</style>
       <div style={styles.board}>
-        <div style={styles.topbar}>
-          <div>
-            <div style={styles.title}>{group.name}</div>
-            <div
-              style={{
-                marginTop: 6,
-                display: "flex",
-                gap: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <span style={styles.linkish} onClick={onBack}>
-                ← Back to Groups
-              </span>
-              <span style={{ opacity: 0.75 }}>
-                Code: <span style={{ fontWeight: 700 }}>{group.code}</span>
-              </span>
-              <span style={styles.linkish} onClick={copyCode} title="Copy code">
-                Copy code
-              </span>
+        <div style={{ ...styles.topbar, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...styles.title, fontSize: isMobile ? 18 : 24 }}>{group.name}</div>
+            <div style={{ marginTop: 6, display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <span style={styles.linkish} onClick={onBack}>← Back</span>
+              <span style={{ opacity: 0.75 }}>Code: <span style={{ fontWeight: 700 }}>{group.code}</span></span>
+              <span style={styles.linkish} onClick={copyCode}>Copy</span>
             </div>
-            {owner && (
-              <div style={{ marginTop: 6, opacity: 0.75, fontSize: 13 }}>
-                Owner: {owner.displayName}
-              </div>
-            )}
+            {owner && <div style={{ marginTop: 4, opacity: 0.6, fontSize: 12 }}>Owner: {owner.displayName}</div>}
           </div>
-
-          <div style={{ opacity: 0.9, textAlign: "right" }}>
-            <div>Signed in as:</div>
-            <div style={{ fontWeight: 700 }}>{user.email}</div>
-          </div>
+          {!isMobile && (
+            <div style={{ opacity: 0.9, textAlign: "right", fontSize: 13 }}>
+              <div style={{ opacity: 0.6 }}>Signed in as:</div>
+              <div style={{ fontWeight: 700 }}>{user.email}</div>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: 16, display: "grid", gap: 16 }}>
@@ -372,23 +358,25 @@ export default function GroupFeedPage({
                             {pred.displayName || pred.email}
                             {isMe ? " (you)" : ""}
                           </span>
-                          <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 3,
-                            opacity: isExpanded ? 0 : 1,
-                            transition: "opacity 0.15s ease",
-                          }}>
-                            {pred.teams.slice(0, 6).map((team) => (
-                              <img
-                                key={team.name}
-                                src={team.logo}
-                                alt={team.name}
-                                title={team.name}
-                                style={{ width: 18, height: 18, objectFit: "contain" }}
-                              />
-                            ))}
-                          </div>
+                          {!isMobile && (
+                            <div style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 3,
+                              opacity: isExpanded ? 0 : 1,
+                              transition: "opacity 0.15s ease",
+                            }}>
+                              {pred.teams.slice(0, 6).map((team) => (
+                                <img
+                                  key={team.name}
+                                  src={team.logo}
+                                  alt={team.name}
+                                  title={team.name}
+                                  style={{ width: 18, height: 18, objectFit: "contain" }}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         {/* Right: score + chevron */}
@@ -434,7 +422,7 @@ export default function GroupFeedPage({
                               : "1px solid rgba(0,0,0,0.06)",
                             paddingTop: 10,
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "130px" : "160px"}, 1fr))`,
                             gap: 4,
                           }}
                         >

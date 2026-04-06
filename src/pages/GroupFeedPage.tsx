@@ -60,17 +60,6 @@ function getPositionBadgeStyle(
   };
 }
 
-function formatDelta(delta: number): string {
-  if (delta === 0) return "✓";
-  if (delta < 0) return `▲${Math.abs(delta)}`;
-  return `▼${delta}`;
-}
-
-function getDeltaColor(delta: number): string {
-  if (delta === 0) return "rgba(120,255,160,0.90)";
-  if (delta < 0) return "rgba(120,200,255,0.90)";
-  return "rgba(255,120,120,0.90)";
-}
 
 type Member = {
   uid: string;
@@ -110,6 +99,16 @@ export default function GroupFeedPage({
   const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(uid: string) {
+    setExpandedUids((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid);
+      else next.add(uid);
+      return next;
+    });
+  }
   const weekKey = getWeekKey();
 
   async function loadMembers() {
@@ -215,6 +214,12 @@ export default function GroupFeedPage({
 
   return (
     <div style={styles.page}>
+      <style>{`
+        @keyframes teamRowIn {
+          from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
       <div style={styles.board}>
         <div style={styles.topbar}>
           <div>
@@ -315,11 +320,12 @@ export default function GroupFeedPage({
                     : null;
                   const isMe = pred.uid === user.uid;
 
+                  const isExpanded = expandedUids.has(pred.uid);
+
                   return (
                     <div
                       key={pred.uid}
                       style={{
-                        padding: "10px 12px",
                         borderRadius: 12,
                         border: isMe
                           ? dark
@@ -335,138 +341,159 @@ export default function GroupFeedPage({
                           : dark
                             ? "rgba(0,0,0,0.15)"
                             : "rgba(0,0,0,0.02)",
+                        overflow: "hidden",
                       }}
                     >
-                      {/* Header row */}
+                      {/* Header row — always visible, click to expand */}
                       <div
+                        onClick={() => toggleExpanded(pred.uid)}
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          marginBottom: 8,
+                          padding: "10px 12px",
+                          cursor: "pointer",
+                          userSelect: "none",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span
-                            style={{
-                              fontWeight: 800,
-                              fontSize: 15,
-                              opacity: 0.5,
-                              minWidth: 20,
-                            }}
-                          >
+                        {/* Left: rank + name + top-6 logos */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                          <span style={{ fontWeight: 800, fontSize: 15, opacity: 0.5, flexShrink: 0 }}>
                             #{i + 1}
                           </span>
-                          <span style={{ fontWeight: 700 }}>
+                          <span style={{ fontWeight: 700, flexShrink: 0 }}>
                             {pred.displayName || pred.email}
                             {isMe ? " (you)" : ""}
                           </span>
-                        </div>
-                        {score !== null && (
-                          <span
-                            style={{
-                              fontWeight: 700,
-                              fontSize: 14,
-                              opacity: 0.9,
-                            }}
-                          >
-                            Score: {score}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Team list */}
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fill, minmax(160px, 1fr))",
-                          gap: 4,
-                        }}
-                      >
-                        {pred.teams.map((team, pos) => {
-                          const predictedPos = pos + 1;
-                          const delta = liveTable
-                            ? getTeamDelta(liveTable, team.name, predictedPos)
-                            : null;
-                          const error = delta !== null ? Math.abs(delta) : 0;
-                          const badgeStyle =
-                            delta !== null
-                              ? getPositionBadgeStyle(error, dark)
-                              : null;
-
-                          return (
-                            <div
-                              key={team.name}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 4,
-                                fontSize: 12,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  minWidth: 18,
-                                  height: 18,
-                                  borderRadius: 5,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontWeight: 800,
-                                  fontSize: 11,
-                                  flexShrink: 0,
-                                  background: badgeStyle
-                                    ? badgeStyle.background
-                                    : dark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
-                                  border: badgeStyle
-                                    ? badgeStyle.border
-                                    : dark
-                                      ? "1px solid rgba(255,255,255,0.10)"
-                                      : "1px solid rgba(0,0,0,0.10)",
-                                }}
-                              >
-                                {predictedPos}
-                              </span>
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 3,
+                            opacity: isExpanded ? 0 : 1,
+                            transition: "opacity 0.15s ease",
+                          }}>
+                            {pred.teams.slice(0, 6).map((team) => (
                               <img
+                                key={team.name}
                                 src={team.logo}
                                 alt={team.name}
-                                style={{
-                                  width: 16,
-                                  height: 16,
-                                  objectFit: "contain",
-                                  flexShrink: 0,
-                                }}
+                                title={team.name}
+                                style={{ width: 18, height: 18, objectFit: "contain" }}
                               />
-                              <span
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Right: score + chevron */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                          {score !== null && (
+                            <div style={{ textAlign: "right", lineHeight: 1 }}>
+                              <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 2, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Score</div>
+                              <div style={{ fontSize: 28, fontWeight: 900, opacity: 0.95 }}>{score}</div>
+                            </div>
+                          )}
+                          <svg
+                            width="20" height="20" viewBox="0 0 20 20"
+                            style={{
+                              opacity: 0.55,
+                              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                              transition: "transform 0.25s ease",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <polyline points="4,7 10,13 16,7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Expanded: full team list */}
+                      {isExpanded && (
+                        <div
+                          style={{
+                            padding: "0 12px 12px",
+                            borderTop: dark
+                              ? "1px solid rgba(255,255,255,0.08)"
+                              : "1px solid rgba(0,0,0,0.06)",
+                            paddingTop: 10,
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                            gap: 4,
+                          }}
+                        >
+                          {pred.teams.map((team, pos) => {
+                            const predictedPos = pos + 1;
+                            const delta = liveTable
+                              ? getTeamDelta(liveTable, team.name, predictedPos)
+                              : null;
+                            const error = delta !== null ? Math.abs(delta) : 0;
+                            const badgeStyle =
+                              delta !== null
+                                ? getPositionBadgeStyle(error, dark)
+                                : null;
+
+                            return (
+                              <div
+                                key={team.name}
                                 style={{
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  opacity: 0.85,
-                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  fontSize: 12,
+                                  animation: "teamRowIn 0.22s ease both",
+                                  animationDelay: `${pos * 20}ms`,
                                 }}
                               >
-                                {team.name}
-                              </span>
-                              {delta !== null && (
                                 <span
                                   style={{
-                                    fontSize: 10,
+                                    minWidth: 18,
+                                    height: 18,
+                                    borderRadius: 5,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                     fontWeight: 800,
-                                    color: getDeltaColor(delta),
+                                    fontSize: 11,
                                     flexShrink: 0,
+                                    background: badgeStyle
+                                      ? badgeStyle.background
+                                      : dark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.06)",
+                                    border: badgeStyle
+                                      ? badgeStyle.border
+                                      : dark
+                                        ? "1px solid rgba(255,255,255,0.10)"
+                                        : "1px solid rgba(0,0,0,0.10)",
                                   }}
                                 >
-                                  {formatDelta(delta)}
+                                  {predictedPos}
                                 </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                                <img
+                                  src={team.logo}
+                                  alt={team.name}
+                                  style={{
+                                    width: 16,
+                                    height: 16,
+                                    objectFit: "contain",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <span
+                                  style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    opacity: 0.85,
+                                    flex: 1,
+                                  }}
+                                >
+                                  {team.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

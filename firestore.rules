@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the requesting user is a member of a group
+    function isMember(groupId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // Groups collection
+    match /groups/{groupId} {
+      // Any authenticated user can read a group doc (needed for join-by-code lookup)
+      allow read: if request.auth != null;
+      // Only authenticated users can create groups
+      allow create: if request.auth != null;
+      // Only the owner can update/delete
+      allow update, delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+
+      // Members subcollection
+      match /members/{userId} {
+        // Members of the group can read the member list
+        allow read: if isMember(groupId);
+        // A user can write their own membership record (join), or the owner can manage members
+        allow write: if request.auth != null
+          && (request.auth.uid == userId
+              || resource.data.ownerUid == request.auth.uid);
+      }
+
+      // Predictions subcollection
+      match /predictions/{weekKey}/users/{userId} {
+        // Any group member can read all predictions for the week
+        allow read: if isMember(groupId);
+        // A user can only write their own prediction and must be a group member
+        allow write: if request.auth != null
+          && request.auth.uid == userId
+          && isMember(groupId);
+      }
+    }
+
+    // Per-user group index
+    match /users/{userId}/groups/{groupId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

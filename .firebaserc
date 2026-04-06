@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "premier-league-challenge"
-  }
+    "default": "premier-league-challenge",
+    "staging": "premier-league-challenge"
+  },
+  "targets": {},
+  "etags": {}
 }

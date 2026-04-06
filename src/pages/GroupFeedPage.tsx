@@ -16,8 +16,10 @@ import {
   saveMyPrediction,
   listPredictionsForWeek,
   type UserPrediction,
+  type Tiebreakers,
 } from "../groups/predictionsApi";
-import { computeTotalErrorScore } from "../utils/scoring";
+import { computeTotalErrorScore, computeTiebreakerBonus } from "../utils/scoring";
+import type { PlayerStat } from "../api/leaders";
 import { useTheme } from "../context/ThemeContext";
 
 function getTeamDelta(
@@ -81,6 +83,8 @@ type Props = {
   onBack: () => void;
   teams: TeamInfo[];
   liveTable: TeamInfo[] | null;
+  leaders: PlayerStat[];
+  tiebreakers: Tiebreakers;
 };
 
 export default function GroupFeedPage({
@@ -89,6 +93,8 @@ export default function GroupFeedPage({
   onBack,
   teams,
   liveTable,
+  leaders,
+  tiebreakers,
 }: Props) {
   const { dark } = useTheme();
   const styles = getStyles(dark);
@@ -176,15 +182,15 @@ export default function GroupFeedPage({
     if (!liveTable) return predictions;
     return [...predictions].sort(
       (a, b) =>
-        computeTotalErrorScore(liveTable, a.teams) -
-        computeTotalErrorScore(liveTable, b.teams),
+        (computeTotalErrorScore(liveTable, a.teams) + computeTiebreakerBonus(leaders, a.tiebreakers)) -
+        (computeTotalErrorScore(liveTable, b.teams) + computeTiebreakerBonus(leaders, b.tiebreakers)),
     );
-  }, [predictions, liveTable]);
+  }, [predictions, liveTable, leaders]);
 
   async function handleSubmit() {
     setSubmitting(true);
     try {
-      await saveMyPrediction(user, group.id, weekKey, teams);
+      await saveMyPrediction(user, group.id, weekKey, teams, tiebreakers);
       setMsg("Prediction submitted!");
       setTimeout(() => setMsg(null), 2000);
       await loadPredictions();
@@ -317,6 +323,7 @@ export default function GroupFeedPage({
                 {rankedPredictions.map((pred, i) => {
                   const score = liveTable
                     ? computeTotalErrorScore(liveTable, pred.teams)
+                        + computeTiebreakerBonus(leaders, pred.tiebreakers)
                     : null;
                   const isMe = pred.uid === user.uid;
 
@@ -387,9 +394,20 @@ export default function GroupFeedPage({
                         {/* Right: score + chevron */}
                         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                           {score !== null && (
-                            <div style={{ textAlign: "right", lineHeight: 1 }}>
-                              <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 2, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Score</div>
-                              <div style={{ fontSize: 28, fontWeight: 900, opacity: 0.95 }}>{score}</div>
+                            <div style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: dark ? "rgba(120,170,255,0.12)" : "rgba(80,120,255,0.10)",
+                              border: dark ? "1px solid rgba(120,170,255,0.25)" : "1px solid rgba(80,120,255,0.20)",
+                              borderRadius: 12,
+                              padding: "6px 14px",
+                              lineHeight: 1,
+                              flexShrink: 0,
+                            }}>
+                              <div style={{ fontSize: 10, opacity: 0.6, marginBottom: 3, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Score</div>
+                              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.02em" }}>{score}</div>
                             </div>
                           )}
                           <svg
@@ -420,6 +438,45 @@ export default function GroupFeedPage({
                             gap: 4,
                           }}
                         >
+                          {/* Tiebreaker picks */}
+                          {(pred.tiebreakers?.topScorer || pred.tiebreakers?.topAssister) && (
+                            <div style={{
+                              gridColumn: "1 / -1",
+                              display: "flex",
+                              gap: 16,
+                              paddingBottom: 8,
+                              marginBottom: 4,
+                              borderBottom: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.05)",
+                            }}>
+                              {pred.tiebreakers?.topScorer && (() => {
+                                const p = leaders.find(l => l.name === pred.tiebreakers!.topScorer);
+                                const liveTop = leaders.length > 0 ? [...leaders].sort((a, b) => b.goals - a.goals)[0] : null;
+                                const correct = liveTop?.name === pred.tiebreakers!.topScorer;
+                                return (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}>
+                                    <span style={{ opacity: 0.5 }}>⚽</span>
+                                    {p && <img src={p.teamCrest} alt={p.teamName} style={{ width: 14, height: 14, objectFit: "contain" }} />}
+                                    <span style={{ opacity: 0.85 }}>{pred.tiebreakers!.topScorer}</span>
+                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "rgba(120,255,160,0.9)" : "rgba(255,120,120,0.8)" }}>{correct ? "✓ −2" : "✗"}</span>}
+                                  </div>
+                                );
+                              })()}
+                              {pred.tiebreakers?.topAssister && (() => {
+                                const p = leaders.find(l => l.name === pred.tiebreakers!.topAssister);
+                                const liveTop = leaders.length > 0 ? [...leaders].sort((a, b) => b.assists - a.assists)[0] : null;
+                                const correct = liveTop?.name === pred.tiebreakers!.topAssister;
+                                return (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}>
+                                    <span style={{ opacity: 0.5 }}>🅰️</span>
+                                    {p && <img src={p.teamCrest} alt={p.teamName} style={{ width: 14, height: 14, objectFit: "contain" }} />}
+                                    <span style={{ opacity: 0.85 }}>{pred.tiebreakers!.topAssister}</span>
+                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "rgba(120,255,160,0.9)" : "rgba(255,120,120,0.8)" }}>{correct ? "✓ −2" : "✗"}</span>}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+
                           {pred.teams.map((team, pos) => {
                             const predictedPos = pos + 1;
                             const delta = liveTable

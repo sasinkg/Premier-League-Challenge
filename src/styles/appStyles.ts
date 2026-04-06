@@ -23,13 +23,6 @@ export function getStyles(dark: boolean) {
     board: {
       maxWidth: 1280,
       margin: "0 auto",
-      borderRadius: 28,
-      padding: 18,
-      background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
-      border,
-      boxShadow: dark
-        ? "0 30px 80px rgba(0,0,0,0.55)"
-        : "0 8px 40px rgba(0,0,0,0.10)",
     } as React.CSSProperties,
 
     topbar: {
@@ -37,7 +30,7 @@ export function getStyles(dark: boolean) {
       alignItems: "center",
       justifyContent: "space-between",
       gap: 16,
-      padding: "10px 8px 18px",
+      padding: "0 4px 20px",
     } as React.CSSProperties,
 
     title: {

@@ -27,6 +27,13 @@ jobs:
             https://api.football-data.org/v4/competitions/PL/standings \
             -o public/standings.json
 
+      - name: Fetch Scorers
+        run: |
+          curl --fail \
+            -H "X-Auth-Token: ${{ secrets.VITE_FOOTBALL_API_KEY }}" \
+            "https://api.football-data.org/v4/competitions/PL/scorers?limit=50" \
+            -o public/scorers.json
+
       - name: Build
         run: npm ci && npm run build
         env:

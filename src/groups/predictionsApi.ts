@@ -10,12 +10,18 @@ import type { User } from "firebase/auth";
 import { db } from "../firebase";
 import type { TeamInfo } from "../api/premierLeague";
 
+export type Tiebreakers = {
+  topScorer?: string;
+  topAssister?: string;
+};
+
 export type UserPrediction = {
   uid: string;
   displayName: string;
   email: string;
   submittedAt?: Timestamp;
   teams: TeamInfo[];
+  tiebreakers?: Tiebreakers;
 };
 
 export async function saveMyPrediction(
@@ -23,6 +29,7 @@ export async function saveMyPrediction(
   groupId: string,
   weekKey: string,
   teams: TeamInfo[],
+  tiebreakers?: Tiebreakers,
 ): Promise<void> {
   await setDoc(
     doc(db, "groups", groupId, "predictions", weekKey, "users", user.uid),
@@ -32,6 +39,7 @@ export async function saveMyPrediction(
       email: user.email ?? "",
       submittedAt: serverTimestamp(),
       teams,
+      tiebreakers: tiebreakers ?? {},
     },
     { merge: true },
   );

@@ -51,9 +51,11 @@ export default function RulesModal({ onClose }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
+        padding: "16px 16px",
+        boxSizing: "border-box",
         opacity: visible ? 1 : 0,
         transition: "opacity 0.25s ease",
+        overflowY: "auto",
       }}
     >
       <div

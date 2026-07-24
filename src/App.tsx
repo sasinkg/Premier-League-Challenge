@@ -8,7 +8,7 @@ import type { TeamInfo } from "./api/premierLeague";
 import { fetchLeaders, type PlayerStat } from "./api/leaders";
 import type { Tiebreakers } from "./groups/predictionsApi";
 import { getStyles } from "./styles/appStyles";
-import { computeTotalErrorScore } from "./utils/scoring";
+import { computeTotalErrorScore, computeTiebreakerBonus } from "./utils/scoring";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
@@ -25,6 +25,23 @@ import { getWeekKey } from "./utils/weekKey";
 import { useTheme } from "./context/ThemeContext";
 
 const SEASON_START = new Date("2025-08-15");
+
+// The predicted table is a season-long guess, so it is stored under one key.
+// Only the weekly drag allowance is keyed by week.
+const PREDICTION_KEY = "plc_prediction";
+
+function loadStoredPrediction(): TeamInfo[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PREDICTION_KEY) ?? "null");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (t): t is TeamInfo =>
+        typeof t?.name === "string" && typeof t?.logo === "string",
+    );
+  } catch {
+    return [];
+  }
+}
 
 function iconBtn(dark: boolean): React.CSSProperties {
   return {
@@ -77,7 +94,7 @@ export default function App() {
   const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
 
   // This is what the user drags (name + logo only)
-  const [teams, setTeams] = useState<TeamInfo[]>([]);
+  const [teams, setTeams] = useState<TeamInfo[]>(loadStoredPrediction);
 
   const weekKey = getWeekKey();
   const now = new Date();
@@ -108,7 +125,17 @@ export default function App() {
           .map((t) => ({ name: t.name, logo: t.logo }))
           .sort((a, b) => a.name.localeCompare(b.name));
 
-        setTeams((prev) => (prev.length ? prev : alphabetical));
+        setTeams((prev) => {
+          if (!prev.length) return alphabetical;
+          // Keep the saved order, but drop teams no longer in the league and
+          // append any new ones so the list always matches the live table.
+          const current = new Map(alphabetical.map((t) => [t.name, t]));
+          const kept = prev
+            .map((t) => current.get(t.name))
+            .filter((t): t is TeamInfo => t !== undefined);
+          const keptNames = new Set(kept.map((t) => t.name));
+          return [...kept, ...alphabetical.filter((t) => !keptNames.has(t.name))];
+        });
       })
       .catch((err) => {
         setLiveError(err?.message ?? "Failed to load live table");
@@ -142,29 +169,32 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  // Persist the predicted order so a page reload does not wipe it while the
+  // weekly drag allowance stays used up.
+  useEffect(() => {
+    if (teams.length) localStorage.setItem(PREDICTION_KEY, JSON.stringify(teams));
+  }, [teams]);
+
   // Convert live standings into TeamInfo[] for scoring
   const liveAsTeamInfo: TeamInfo[] | null = useMemo(() => {
     if (!liveTable) return null;
     return liveTable.map((t) => ({ name: t.name, logo: t.logo }));
   }, [liveTable]);
 
-  const points = useMemo(
-    () => computeTotalErrorScore(liveAsTeamInfo, teams),
-    [liveAsTeamInfo, teams],
-  );
-  if (page === "groupFeed") {
-    if (!user || !activeGroup) {
-      return (
-        <div key="groups" className="page-enter">
-          <GroupsPage
-            user={user!}
-            onBack={() => setPage("game")}
-            onOpenGroup={(g) => { setActiveGroup(g); setPage("groupFeed"); }}
-          />
-        </div>
-      );
-    }
+  // Null while the live table is still loading, so the UI can show a
+  // placeholder instead of a "0" that reads as a perfect score.
+  const points = useMemo(() => {
+    if (!liveAsTeamInfo) return null;
+    return (
+      computeTotalErrorScore(liveAsTeamInfo, teams) +
+      computeTiebreakerBonus(leaders, tiebreakers)
+    );
+  }, [liveAsTeamInfo, teams, leaders, tiebreakers]);
 
+  // Both group pages require a signed-in user (and a selected group). Deriving
+  // this rather than correcting `page` in an effect means signing out while on
+  // a group page falls back to the game instead of rendering with a null user.
+  if (page === "groupFeed" && user && activeGroup) {
     return (
       <div key="groupFeed" className="page-enter">
         <GroupFeedPage
@@ -180,13 +210,7 @@ export default function App() {
     );
   }
 
-  if (page === "groups") {
-    if (!user) {
-      alert("Please sign in to use Groups");
-      setPage("game");
-      return null;
-    }
-
+  if (page === "groups" && user) {
     return (
       <div key="groups" className="page-enter">
         <GroupsPage
@@ -216,7 +240,19 @@ export default function App() {
   const iconButtons = (
     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
       <button onClick={() => setShowRules(true)} title="Rules" style={iconBtn(dark)}>ⓘ</button>
-      <button onClick={() => setPage("groups")} title="Groups" style={iconBtn(dark)}>👥</button>
+      <button
+        onClick={() => {
+          if (!user) {
+            alert("Please sign in to use Groups");
+            return;
+          }
+          setPage("groups");
+        }}
+        title="Groups"
+        style={iconBtn(dark)}
+      >
+        👥
+      </button>
       <div style={{ position: "relative" }}>
         <button
           onClick={() => setSettingsOpen(o => !o)}
@@ -266,7 +302,7 @@ export default function App() {
               textAlign: "center",
               boxSizing: "border-box",
             }}>
-              <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 900, letterSpacing: "-0.03em" }}>{points}</span>
+              <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 900, letterSpacing: "-0.03em" }}>{points ?? "—"}</span>
             </div>
           </div>
 

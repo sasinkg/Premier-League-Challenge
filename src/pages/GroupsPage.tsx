@@ -137,7 +137,7 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
               <input
                 value={joinCode}
                 onChange={(e) =>
-                  setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 4))
                 }
                 placeholder="4-digit code"
                 style={{ ...inputStyle, minWidth: 180 }}
@@ -185,8 +185,18 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                         style={{ ...styles.button, background: "rgba(255,80,80,0.9)" }}
                         onClick={async () => {
                           if (!confirm(`Delete "${g.name}"?`)) return;
-                          await softDeleteGroup(user, g.id);
-                          await refresh();
+                          setMsg(null);
+                          try {
+                            await softDeleteGroup(user, g.id);
+                            await refresh();
+                          } catch (e: unknown) {
+                            // Firestore rules only let the owner delete a group.
+                            setMsg(
+                              e instanceof Error
+                                ? `Could not delete "${g.name}": ${e.message}`
+                                : `Could not delete "${g.name}"`,
+                            );
+                          }
                         }}
                       >
                         Delete

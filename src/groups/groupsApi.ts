@@ -33,6 +33,7 @@ type GroupDoc = {
   code?: string;
   ownerUid?: string;
   createdAt?: unknown;
+  deleted?: boolean;
 };
 
 type UserGroupIndexDoc = {
@@ -77,14 +78,13 @@ export async function createGroup(
   if (!name) throw new Error("Group name is required");
 
   // retry a few times in case of collision
-  let code = makeCode(4);
-  for (let i = 0; i < 5; i++) {
-    const exists = await codeExists(code);
-    if (!exists) break;
-    code = makeCode(4);
-    if (i === 4) {
+  let code = "";
+  for (let i = 0; ; i++) {
+    if (i === 5) {
       throw new Error("Could not generate a unique group code. Try again.");
     }
+    code = makeCode(4);
+    if (!(await codeExists(code))) break;
   }
 
   const groupRef = await addDoc(collection(db, "groups"), {
@@ -141,6 +141,8 @@ export async function joinGroupByCode(
 
   const groupDocSnap = snap.docs[0];
   const data = groupDocSnap.data() as GroupDoc;
+
+  if (data.deleted === true) throw new Error("No group found with that code");
 
   const name =
     typeof data.name === "string" && data.name.length > 0

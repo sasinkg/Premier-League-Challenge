@@ -10,6 +10,8 @@ type Props = {
   players: PlayerStat[];
   tiebreakers: Tiebreakers;
   locked: boolean;
+  /** Date picks become editable again, shown in the locked tooltip. */
+  unlockLabel: string;
   onTiebreakerChange: (key: keyof Tiebreakers, value: string) => void;
 };
 
@@ -144,7 +146,13 @@ function PlayerPicker({
   );
 }
 
-function LockedOverlay({ children }: { children: React.ReactNode }) {
+function LockedOverlay({
+  children,
+  unlockLabel,
+}: {
+  children: React.ReactNode;
+  unlockLabel: string;
+}) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -171,7 +179,7 @@ function LockedOverlay({ children }: { children: React.ReactNode }) {
           boxShadow: "0 4px 16px rgba(220,38,38,0.4)",
           zIndex: 200,
         }}>
-          🔒 Picks locked until 30 Jun 2026
+          🔒 Picks locked until {unlockLabel}
           <div style={{
             position: "absolute",
             top: "100%",
@@ -205,7 +213,7 @@ function LiveLeader({ player, stat, suffix }: { player: PlayerStat | null; stat:
   );
 }
 
-export default function LeadersPanel({ players, tiebreakers, locked, onTiebreakerChange }: Props) {
+export default function LeadersPanel({ players, tiebreakers, locked, unlockLabel, onTiebreakerChange }: Props) {
   const { dark } = useTheme();
   const isMobile = useWindowWidth() < 768;
   const styles = getStyles(dark, isMobile);
@@ -241,7 +249,7 @@ export default function LeadersPanel({ players, tiebreakers, locked, onTiebreake
           <LiveLeader player={topScorer} stat={topScorer?.goals ?? 0} suffix="⚽" />
           <div style={{ fontSize: 11, opacity: 0.45 }}>Your pick</div>
           {locked ? (
-            <LockedOverlay>
+            <LockedOverlay unlockLabel={unlockLabel}>
               <PlayerPicker
                 players={players}
                 value={tiebreakers.topScorer ?? ""}
@@ -270,7 +278,7 @@ export default function LeadersPanel({ players, tiebreakers, locked, onTiebreake
           <LiveLeader player={topAssister} stat={topAssister?.assists ?? 0} suffix="🅰️" />
           <div style={{ fontSize: 11, opacity: 0.45 }}>Your pick</div>
           {locked ? (
-            <LockedOverlay>
+            <LockedOverlay unlockLabel={unlockLabel}>
               <PlayerPicker
                 players={players}
                 value={tiebreakers.topAssister ?? ""}

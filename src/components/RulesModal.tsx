@@ -104,7 +104,7 @@ export default function RulesModal({ onClose }: Props) {
         {/* Rules */}
         <div style={{ display: "grid", gap: 16 }}>
           {rule("🏆", "Predict the final table", "Arrange all 20 Premier League teams into the order you think they'll finish at the end of the season.")}
-          {rule("🔀", "One change per week", "During the season you get one drag per week to update your prediction. Use it wisely.")}
+          {rule("🔀", "One change per week", "Before the season kicks off you can reorder as much as you like. Once it starts you get one drag per week to update your prediction — use it wisely.")}
           {rule("📊", "Scoring", "Your score is the total position error — the sum of how far off each team is. Lower is better. A score of 0 would be a perfect prediction.")}
           {rule("⚽", "Tiebreakers", "Before the season starts, pick a top scorer and top assister. Each correct pick reduces your score by 2 points. Picks are locked once the season begins.")}
           {rule("👥", "Groups", "Create or join a group with friends to compare predictions and compete on a shared leaderboard.")}

@@ -22,10 +22,11 @@ service cloud.firestore {
       match /members/{userId} {
         // Members of the group can read the member list
         allow read: if isMember(groupId);
-        // A user can write their own membership record (join), or the owner can manage members
+        // A user can write their own membership record (join), or the owner can manage members.
+        // ownerUid lives on the parent group doc, not on the member doc.
         allow write: if request.auth != null
           && (request.auth.uid == userId
-              || resource.data.ownerUid == request.auth.uid);
+              || get(/databases/$(database)/documents/groups/$(groupId)).data.ownerUid == request.auth.uid);
       }
 
       // Predictions subcollection

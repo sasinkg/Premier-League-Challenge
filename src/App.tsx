@@ -24,7 +24,19 @@ import { signInWithGoogle, logOut } from "./auth/auth";
 import { getWeekKey } from "./utils/weekKey";
 import { useTheme } from "./context/ThemeContext";
 
-const SEASON_START = new Date("2025-08-15");
+// 2026/27 season. Constructed in local time (not `new Date("2026-08-21")`,
+// which parses as UTC midnight and would flip a few hours early or late
+// depending on the viewer's timezone).
+// Before kickoff the prediction can be reordered freely; from kickoff onwards
+// it is one drag per week.
+const SEASON_START = new Date(2026, 7, 21); // 21 Aug 2026
+const SEASON_END = new Date(2027, 5, 30); // 30 Jun 2027
+
+const DATE_LABEL: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
 
 // The predicted table is a season-long guess, so it is stored under one key.
 // Only the weekly drag allowance is keyed by week.
@@ -75,8 +87,6 @@ function dropdownItem(dark: boolean): React.CSSProperties {
     textAlign: "left",
   };
 }
-const TIEBREAKER_LOCK = new Date("2025-08-15");
-const TIEBREAKER_UNLOCK = new Date("2026-06-30");
 
 export default function App() {
   const { dark, toggleTheme } = useTheme();
@@ -98,8 +108,10 @@ export default function App() {
 
   const weekKey = getWeekKey();
   const now = new Date();
-  const tiebreakerLocked = now >= TIEBREAKER_LOCK && now < TIEBREAKER_UNLOCK;
-  const seasonActive = new Date() >= SEASON_START;
+  const seasonActive = now >= SEASON_START;
+  // Tiebreaker picks are locked for the duration of the season, matching the
+  // "locked once the season begins" rule shown in the rules modal.
+  const tiebreakerLocked = seasonActive && now < SEASON_END;
   const dragStorageKey = `plc_dragged_${weekKey}`;
 
   const [hasUsedDrag, setHasUsedDrag] = useState(() =>
@@ -325,6 +337,7 @@ export default function App() {
             players={leaders}
             tiebreakers={tiebreakers}
             locked={tiebreakerLocked}
+            unlockLabel={SEASON_END.toLocaleDateString("en-GB", DATE_LABEL)}
             onTiebreakerChange={(key, value) =>
               setTiebreakers(prev => ({ ...prev, [key]: value }))
             }
@@ -335,6 +348,11 @@ export default function App() {
             onDragEnd={handleDrag}
             changesLeft={changesLeft}
             canDrag={canDrag}
+            unlimitedUntil={
+              seasonActive
+                ? undefined
+                : SEASON_START.toLocaleDateString("en-GB", DATE_LABEL)
+            }
             onRevert={teamsBeforeDrag ? handleRevert : undefined}
             onSubmit={() => {
               if (!user) {

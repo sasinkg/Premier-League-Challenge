@@ -63,6 +63,7 @@ export default function PredictionPanel({
   canDrag,
   onRevert,
   onSubmit,
+  unlimitedUntil,
 }: {
   teams: TeamInfo[];
   liveTable: TeamInfo[] | null;
@@ -71,29 +72,36 @@ export default function PredictionPanel({
   canDrag: boolean;
   onRevert?: () => void;
   onSubmit?: () => void;
+  /** Set before kickoff: reordering is unlimited until this date. */
+  unlimitedUntil?: string;
 }) {
   const { dark } = useTheme();
   const isMobile = useWindowWidth() < 768;
   const styles = getStyles(dark, isMobile);
+  const unlimited = Boolean(unlimitedUntil);
 
   return (
     <section style={styles.panel}>
       <PanelHeader
         title="Your Prediction"
         subtitle={
-          canDrag
-            ? "Drag one team to reorder your table"
-            : "No changes left this week"
+          unlimited
+            ? `Reorder freely until ${unlimitedUntil}`
+            : canDrag
+              ? "Drag one team to reorder your table"
+              : "No changes left this week"
         }
         right={
           <span
             style={{
               ...styles.pill,
-              background: changesLeft > 0 ? "#06402F" : "rgba(255,60,60,0.15)",
-              color: changesLeft > 0 ? "lime" : "rgba(255,100,100,0.9)",
+              background:
+                unlimited || changesLeft > 0 ? "#06402F" : "rgba(255,60,60,0.15)",
+              color:
+                unlimited || changesLeft > 0 ? "lime" : "rgba(255,100,100,0.9)",
             }}
           >
-            Changes left: {changesLeft}
+            {unlimited ? "Unlimited changes" : `Changes left: ${changesLeft}`}
           </span>
         }
       />
@@ -250,7 +258,11 @@ export default function PredictionPanel({
       )}
 
       <div style={styles.footer}>
-        <span style={{ opacity: 0.6, fontSize: 12 }}>* 1 change per week</span>
+        <span style={{ opacity: 0.6, fontSize: 12 }}>
+          {unlimited
+            ? `* Unlimited changes until ${unlimitedUntil}, then 1 per week`
+            : "* 1 change per week"}
+        </span>
       </div>
     </section>
   );

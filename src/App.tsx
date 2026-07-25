@@ -6,6 +6,7 @@ import {
 } from "./api/premierLeague";
 import type { TeamInfo } from "./api/premierLeague";
 import { fetchLeaders, type PlayerStat } from "./api/leaders";
+import { fetchAllForm, type FormResult } from "./api/form";
 import type { Tiebreakers } from "./groups/predictionsApi";
 import { getStyles } from "./styles/appStyles";
 import { computeTotalErrorScore, computeTiebreakerBonus } from "./utils/scoring";
@@ -96,6 +97,7 @@ export default function App() {
   const [liveTable, setLiveTable] = useState<LiveStanding[] | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [leaders, setLeaders] = useState<PlayerStat[]>([]);
+  const [formByTeam, setFormByTeam] = useState<Map<string, FormResult[]>>(new Map());
   const [tiebreakers, setTiebreakers] = useState<Tiebreakers>({});
   const [showRules, setShowRules] = useState(() => localStorage.getItem("plc_rules_seen") !== "1");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -125,6 +127,10 @@ export default function App() {
 
   useEffect(() => {
     fetchLeaders().then(setLeaders);
+  }, []);
+
+  useEffect(() => {
+    fetchAllForm().then(setFormByTeam);
   }, []);
 
   useEffect(() => {
@@ -332,6 +338,7 @@ export default function App() {
             liveTable={liveAsTeamInfo}
             liveError={liveError}
             weekLabel={weekLabel}
+            formByTeam={formByTeam}
           />
           <LeadersPanel
             players={leaders}

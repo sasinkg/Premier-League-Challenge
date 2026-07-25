@@ -56,6 +56,24 @@ function loadStoredPrediction(): TeamInfo[] {
   }
 }
 
+// Tiebreaker picks (top scorer / top assister) are stored locally so a page
+// reload doesn't lose them before they've been submitted to a group.
+const TIEBREAKERS_KEY = "plc_tiebreakers";
+
+function loadStoredTiebreakers(): Tiebreakers {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TIEBREAKERS_KEY) ?? "null");
+    if (!parsed || typeof parsed !== "object") return {};
+    const { topScorer, topAssister } = parsed as Tiebreakers;
+    return {
+      ...(typeof topScorer === "string" ? { topScorer } : {}),
+      ...(typeof topAssister === "string" ? { topAssister } : {}),
+    };
+  } catch {
+    return {};
+  }
+}
+
 function iconBtn(dark: boolean): React.CSSProperties {
   return {
     display: "inline-flex",
@@ -98,7 +116,7 @@ export default function App() {
   const [liveError, setLiveError] = useState<string | null>(null);
   const [leaders, setLeaders] = useState<PlayerStat[]>([]);
   const [formByTeam, setFormByTeam] = useState<Map<string, FormResult[]>>(new Map());
-  const [tiebreakers, setTiebreakers] = useState<Tiebreakers>({});
+  const [tiebreakers, setTiebreakers] = useState<Tiebreakers>(loadStoredTiebreakers);
   const [showRules, setShowRules] = useState(() => localStorage.getItem("plc_rules_seen") !== "1");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -192,6 +210,10 @@ export default function App() {
   useEffect(() => {
     if (teams.length) localStorage.setItem(PREDICTION_KEY, JSON.stringify(teams));
   }, [teams]);
+
+  useEffect(() => {
+    localStorage.setItem(TIEBREAKERS_KEY, JSON.stringify(tiebreakers));
+  }, [tiebreakers]);
 
   // Convert live standings into TeamInfo[] for scoring
   const liveAsTeamInfo: TeamInfo[] | null = useMemo(() => {

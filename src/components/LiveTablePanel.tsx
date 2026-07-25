@@ -1,18 +1,60 @@
 import { useState } from "react";
 import type { TeamInfo } from "../api/premierLeague";
+import type { FormResult } from "../api/form";
 import PanelHeader from "./PanelHeader";
 import { getStyles } from "../styles/appStyles";
 import { useTheme } from "../context/ThemeContext";
 import { useWindowWidth } from "../hooks/useWindowWidth";
 
+const FORM_COLOR: Record<FormResult["result"], string> = {
+  W: "#22c55e",
+  D: "#9ca3af",
+  L: "#ef4444",
+};
+
+function FormDots({ form }: { form: FormResult[] }) {
+  const slots = Array.from({ length: 5 }, (_, i) => form[i]);
+  return (
+    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+      {slots.map((f, i) =>
+        f ? (
+          <span
+            key={i}
+            title={`${f.result} ${f.scoreFor}-${f.scoreAgainst} vs ${f.opponent} (${f.home ? "H" : "A"}) · ${new Date(f.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: "50%",
+              background: FORM_COLOR[f.result],
+              cursor: "default",
+            }}
+          />
+        ) : (
+          <span
+            key={i}
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: "50%",
+              background: "rgba(128,128,128,0.25)",
+            }}
+          />
+        ),
+      )}
+    </div>
+  );
+}
+
 export default function LiveTablePanel({
   liveTable,
   liveError,
   weekLabel,
+  formByTeam,
 }: {
   liveTable: TeamInfo[] | null;
   liveError: string | null;
   weekLabel: string;
+  formByTeam: Map<string, FormResult[]>;
 }) {
   const { dark } = useTheme();
   const isMobile = useWindowWidth() < 768;
@@ -69,10 +111,19 @@ export default function LiveTablePanel({
                   : "transparent";
 
                 return (
-                  <div key={row.name} style={{ ...styles.row, background: highlight, borderLeft: `3px solid ${accentColor}` }}>
+                  <div
+                    key={row.name}
+                    style={{
+                      ...styles.row,
+                      gridTemplateColumns: "44px 30px 1fr auto",
+                      background: highlight,
+                      borderLeft: `3px solid ${accentColor}`,
+                    }}
+                  >
                     <div style={styles.pos}>{pos}</div>
                     <img src={row.logo} alt={row.name} style={{ width: 26, height: 26, objectFit: "contain" }} />
                     <div style={styles.clubName}>{row.name}</div>
+                    <FormDots form={formByTeam.get(row.name) ?? []} />
                   </div>
                 );
               })}

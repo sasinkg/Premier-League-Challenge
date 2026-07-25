@@ -42,6 +42,14 @@ jobs:
             -o public/teams.json
           echo "teams.json: $(wc -c < public/teams.json) bytes"
 
+      - name: Fetch Recent Matches
+        run: |
+          curl --fail \
+            -H "X-Auth-Token: ${{ secrets.VITE_FOOTBALL_API_KEY }}" \
+            "https://api.football-data.org/v4/competitions/PL/matches?status=FINISHED" \
+            -o public/matches.json
+          echo "matches.json: $(wc -c < public/matches.json) bytes"
+
       - name: Build
         run: npm ci && npm run build
         env:

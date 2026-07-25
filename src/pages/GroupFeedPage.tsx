@@ -165,8 +165,12 @@ export default function GroupFeedPage({
   }
 
   useEffect(() => {
-    loadMembers();
-    loadPredictions();
+    // Deferred a tick so loadMembers/loadPredictions's setState calls don't
+    // run synchronously within the effect body itself.
+    void Promise.resolve().then(() => {
+      loadMembers();
+      loadPredictions();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group.id]);
 

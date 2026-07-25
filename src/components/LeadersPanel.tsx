@@ -34,7 +34,9 @@ function PlayerPicker({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setQuery(value); }, [value]);
+  // Deferred a tick so this doesn't setState synchronously within the effect
+  // body itself; still resolves before paint, so there's no visible delay.
+  useEffect(() => { void Promise.resolve().then(() => setQuery(value)); }, [value]);
 
   useEffect(() => {
     function handle(e: MouseEvent) {

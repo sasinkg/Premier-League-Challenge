@@ -40,7 +40,9 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
   }
 
   useEffect(() => {
-    refresh();
+    // Deferred a tick so `refresh`'s setState calls don't run synchronously
+    // within the effect body itself.
+    void Promise.resolve().then(() => refresh());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.uid]);
 

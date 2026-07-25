@@ -220,8 +220,13 @@ export default function LeadersPanel({ players, tiebreakers, locked, unlockLabel
   const [collapsed, setCollapsed] = useState(false);
   const isCollapsed = isMobile && collapsed;
 
-  const topScorer = players.length > 0 ? [...players].sort((a, b) => b.goals - a.goals)[0] : null;
-  const topAssister = players.length > 0 ? [...players].sort((a, b) => b.assists - a.assists)[0] : null;
+  // Squad players are seeded with zero stats (see fetchLeaders) so search
+  // always has real names, but that means a top-of-sort pick isn't a real
+  // "leader" until someone has actually scored/assisted.
+  const topScorerPick = [...players].sort((a, b) => b.goals - a.goals)[0];
+  const topScorer = topScorerPick && topScorerPick.goals > 0 ? topScorerPick : null;
+  const topAssisterPick = [...players].sort((a, b) => b.assists - a.assists)[0];
+  const topAssister = topAssisterPick && topAssisterPick.assists > 0 ? topAssisterPick : null;
 
   const cardStyle: React.CSSProperties = {
     background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",

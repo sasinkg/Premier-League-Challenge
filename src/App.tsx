@@ -30,7 +30,7 @@ import { useTheme } from "./context/ThemeContext";
 // depending on the viewer's timezone).
 // Before kickoff the prediction can be reordered freely; from kickoff onwards
 // it is one drag per week.
-const SEASON_START = new Date(2026, 7, 21); // 21 Aug 2026
+const SEASON_START = new Date(2026, 7, 31); // 31 Aug 2026
 const SEASON_END = new Date(2027, 5, 30); // 30 Jun 2027
 
 const DATE_LABEL: Intl.DateTimeFormatOptions = {

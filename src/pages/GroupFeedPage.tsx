@@ -14,7 +14,7 @@ import type { TeamInfo } from "../api/premierLeague";
 import { getWeekKey } from "../utils/weekKey";
 import {
   saveMyPrediction,
-  listPredictionsForWeek,
+  listActivePredictions,
   type UserPrediction,
   type Tiebreakers,
 } from "../groups/predictionsApi";
@@ -155,7 +155,7 @@ export default function GroupFeedPage({
   async function loadPredictions() {
     setLoadingPredictions(true);
     try {
-      const list = await listPredictionsForWeek(group.id, weekKey);
+      const list = await listActivePredictions(group.id, weekKey);
       setPredictions(list);
     } catch (e: unknown) {
       setMsg(e instanceof Error ? e.message : "Failed to load predictions");
@@ -260,7 +260,7 @@ export default function GroupFeedPage({
               {myPrediction ? "Update My Prediction" : "Post My Prediction"}
             </div>
             <div style={{ opacity: 0.75, fontSize: 13, marginBottom: 10 }}>
-              Week of {weekKey} — submits your current predicted table order
+              Your table stays active until you submit an updated prediction.
             </div>
             <button
               style={{

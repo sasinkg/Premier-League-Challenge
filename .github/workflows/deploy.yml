@@ -62,16 +62,6 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
 
-      # Hosting deploys do not publish Firestore rules. Keep the production
-      # rules in sync with the app so new Firestore paths are authorised.
-      - name: Authenticate for Firebase CLI
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PREMIER_LEAGUE_CHALLENGE }}
-
-      - name: Deploy Firestore rules
-        run: npx firebase-tools deploy --only firestore:rules --project premier-league-challenge
-
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

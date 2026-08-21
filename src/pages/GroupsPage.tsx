@@ -10,19 +10,49 @@ import {
 import { softDeleteGroup } from "../groups/groupsApi";
 import { useTheme } from "../context/ThemeContext";
 import { useWindowWidth } from "../hooks/useWindowWidth";
+import type { TeamInfo } from "../api/premierLeague";
+import type { PlayerStat } from "../api/leaders";
+import { listActivePredictions } from "../groups/predictionsApi";
+import { computeTiebreakerBonus, computeTotalErrorScore } from "../utils/scoring";
+import { getWeekKey } from "../utils/weekKey";
 
 type Props = {
   user: User;
   onBack: () => void;
   onOpenGroup: (group: GroupSummary) => void;
+  liveTable: TeamInfo[] | null;
+  leaders: PlayerStat[];
 };
 
-export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
+type GroupRank = {
+  place: number;
+  total: number;
+};
+
+function ordinal(value: number): string {
+  const lastTwo = value % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return `${value}th`;
+  switch (value % 10) {
+    case 1: return `${value}st`;
+    case 2: return `${value}nd`;
+    case 3: return `${value}rd`;
+    default: return `${value}th`;
+  }
+}
+
+export default function GroupsPage({
+  user,
+  onBack,
+  onOpenGroup,
+  liveTable,
+  leaders,
+}: Props) {
   const { dark } = useTheme();
   const isMobile = useWindowWidth() < 768;
   const styles = getStyles(dark, isMobile);
 
   const [myGroups, setMyGroups] = useState<GroupSummary[]>([]);
+  const [groupRanks, setGroupRanks] = useState<Map<string, GroupRank>>(new Map());
   const [loading, setLoading] = useState(true);
 
   const [newGroupName, setNewGroupName] = useState("");
@@ -34,6 +64,32 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
     try {
       const groups = await listMyGroups(user);
       setMyGroups(groups);
+      if (!liveTable) {
+        setGroupRanks(new Map());
+        return;
+      }
+
+      const ranks = await Promise.all(
+        groups.map(async (group): Promise<[string, GroupRank | null]> => {
+          try {
+            const predictions = await listActivePredictions(group.id, getWeekKey());
+            const ranked = [...predictions].sort(
+              (a, b) =>
+                computeTotalErrorScore(liveTable, a.teams) + computeTiebreakerBonus(leaders, a.tiebreakers) -
+                (computeTotalErrorScore(liveTable, b.teams) + computeTiebreakerBonus(leaders, b.tiebreakers)),
+            );
+            const index = ranked.findIndex((prediction) => prediction.uid === user.uid);
+            return [group.id, index === -1 ? null : { place: index + 1, total: ranked.length }];
+          } catch {
+            return [group.id, null];
+          }
+        }),
+      );
+      const rankMap = new Map<string, GroupRank>();
+      for (const [groupId, rank] of ranks) {
+        if (rank) rankMap.set(groupId, rank);
+      }
+      setGroupRanks(rankMap);
     } finally {
       setLoading(false);
     }
@@ -176,6 +232,11 @@ export default function GroupsPage({ user, onBack, onOpenGroup }: Props) {
                       <div style={{ opacity: 0.75, fontSize: 13 }}>
                         Code: {g.code}
                       </div>
+                      {groupRanks.get(g.id) && (
+                        <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800, color: dark ? "rgba(140,190,255,0.95)" : "#2458b8" }}>
+                          {ordinal(groupRanks.get(g.id)!.place)} of {groupRanks.get(g.id)!.total}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: "flex", gap: 10 }}>

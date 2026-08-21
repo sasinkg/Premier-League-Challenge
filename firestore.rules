@@ -53,5 +53,11 @@ service cloud.firestore {
     match /users/{userId}/groups/{groupId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Personal table used to keep the main prediction screen in sync across
+    // a signed-in user's devices.
+    match /users/{userId}/settings/{settingId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

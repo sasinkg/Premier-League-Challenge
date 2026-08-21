@@ -15,6 +15,8 @@ import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
 import GroupFeedPage from "./pages/GroupFeedPage";
 import { listMyGroups, type GroupSummary } from "./groups/groupsApi";
+import { loadMyPersonalPrediction, saveMyPersonalPrediction } from "./predictions/personalPredictionApi";
+import { listActivePredictions, type UserPrediction } from "./groups/predictionsApi";
 import type { DropResult } from "@hello-pangea/dnd";
 
 import LiveTablePanel from "./components/LiveTablePanel";
@@ -120,6 +122,7 @@ export default function App() {
   const [showRules, setShowRules] = useState(() => localStorage.getItem("plc_rules_seen") !== "1");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [submittingPrediction, setSubmittingPrediction] = useState(false);
+  const [personalPredictionLoaded, setPersonalPredictionLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<"game" | "groups" | "groupFeed">("game");
   const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
@@ -231,8 +234,48 @@ export default function App() {
   }
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
+    let cancelled = false;
+
+    async function loadPredictionForUser(u: User) {
+      try {
+        let prediction = await loadMyPersonalPrediction(u);
+
+        // First-time migration: recover the most recently submitted group
+        // table, so a user can switch devices without needing to resubmit.
+        if (!prediction) {
+          const groups = await listMyGroups(u);
+          const candidates = (
+            await Promise.all(
+              groups.map((group) => listActivePredictions(group.id, getWeekKey())),
+            )
+          )
+            .flat()
+            .filter((entry) => entry.uid === u.uid);
+          prediction = mostRecentPrediction(candidates);
+        }
+
+        if (!cancelled && prediction?.teams.length) {
+          setTeams(prediction.teams);
+          localStorage.setItem(PREDICTION_KEY, JSON.stringify(prediction.teams));
+        }
+      } catch {
+        // Keep the device's local prediction available if cloud sync is
+        // temporarily unavailable.
+      } finally {
+        if (!cancelled) setPersonalPredictionLoaded(true);
+      }
+    }
+
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setPersonalPredictionLoaded(false);
+      if (u) void loadPredictionForUser(u);
+      else setPersonalPredictionLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, []);
 
   // Persist the predicted order so a page reload does not wipe it while the
@@ -240,6 +283,14 @@ export default function App() {
   useEffect(() => {
     if (teams.length) localStorage.setItem(PREDICTION_KEY, JSON.stringify(teams));
   }, [teams]);
+
+  // A signed-in user's table follows them across devices. Wait until the
+  // initial cloud load has completed so an empty phone never overwrites a
+  // prediction already saved from another device.
+  useEffect(() => {
+    if (!user || !personalPredictionLoaded || !teams.length) return;
+    void saveMyPersonalPrediction(user, teams);
+  }, [user, personalPredictionLoaded, teams]);
 
   useEffect(() => {
     localStorage.setItem(TIEBREAKERS_KEY, JSON.stringify(tiebreakers));
@@ -287,6 +338,8 @@ export default function App() {
           user={user}
           onBack={() => setPage("game")}
           onOpenGroup={(g) => { setActiveGroup(g); setPage("groupFeed"); }}
+          liveTable={liveAsTeamInfo}
+          leaders={leaders}
         />
       </div>
     );
@@ -421,4 +474,13 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+function mostRecentPrediction(predictions: UserPrediction[]): UserPrediction | null {
+  return predictions.reduce<UserPrediction | null>((latest, prediction) => {
+    if (!latest) return prediction;
+    const latestTime = latest.submittedAt?.toMillis() ?? 0;
+    const predictionTime = prediction.submittedAt?.toMillis() ?? 0;
+    return predictionTime > latestTime ? prediction : latest;
+  }, null);
 }

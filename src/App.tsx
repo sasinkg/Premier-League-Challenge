@@ -7,14 +7,14 @@ import {
 import type { TeamInfo } from "./api/premierLeague";
 import { fetchLeaders, type PlayerStat } from "./api/leaders";
 import { fetchAllForm, type FormResult } from "./api/form";
-import type { Tiebreakers } from "./groups/predictionsApi";
+import { saveMyPrediction, type Tiebreakers } from "./groups/predictionsApi";
 import { getStyles } from "./styles/appStyles";
 import { computeTotalErrorScore, computeTiebreakerBonus } from "./utils/scoring";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "./firebase";
 import GroupsPage from "./pages/GroupsPage";
 import GroupFeedPage from "./pages/GroupFeedPage";
-import type { GroupSummary } from "./groups/groupsApi";
+import { listMyGroups, type GroupSummary } from "./groups/groupsApi";
 import type { DropResult } from "@hello-pangea/dnd";
 
 import LiveTablePanel from "./components/LiveTablePanel";
@@ -119,6 +119,7 @@ export default function App() {
   const [tiebreakers, setTiebreakers] = useState<Tiebreakers>(loadStoredTiebreakers);
   const [showRules, setShowRules] = useState(() => localStorage.getItem("plc_rules_seen") !== "1");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [submittingPrediction, setSubmittingPrediction] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<"game" | "groups" | "groupFeed">("game");
   const [activeGroup, setActiveGroup] = useState<GroupSummary | null>(null);
@@ -198,6 +199,35 @@ export default function App() {
     setTeamsBeforeDrag(null);
     setHasUsedDrag(false);
     localStorage.removeItem(dragStorageKey);
+  }
+
+  async function submitPredictionToMyGroups() {
+    if (!user) {
+      alert("Sign in to submit a prediction.");
+      return;
+    }
+
+    setSubmittingPrediction(true);
+    try {
+      const groups = await listMyGroups(user);
+      if (groups.length === 0) {
+        setPage("groups");
+        return;
+      }
+
+      await Promise.all(
+        groups.map((group) =>
+          saveMyPrediction(user, group.id, weekKey, teams, tiebreakers),
+        ),
+      );
+      alert(
+        `Prediction submitted to ${groups.length} ${groups.length === 1 ? "group" : "groups"}.`,
+      );
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Failed to submit prediction.");
+    } finally {
+      setSubmittingPrediction(false);
+    }
   }
 
   useEffect(() => {
@@ -383,14 +413,9 @@ export default function App() {
                 : SEASON_START.toLocaleDateString("en-GB", DATE_LABEL)
             }
             onRevert={teamsBeforeDrag ? handleRevert : undefined}
-            onSubmit={() => {
-              if (!user) {
-                alert("Sign in to submit a prediction.");
-              } else {
-                setTeamsBeforeDrag(null);
-                setPage("groups");
-              }
-            }}
+            onSubmit={submitPredictionToMyGroups}
+            submitLabel={user ? "Submit to My Groups" : "Sign in to Submit"}
+            submitting={submittingPrediction}
           />
         </div>
       </div>

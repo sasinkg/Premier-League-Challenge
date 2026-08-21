@@ -63,6 +63,8 @@ export default function PredictionPanel({
   canDrag,
   onRevert,
   onSubmit,
+  submitLabel = "Submit Prediction to Group",
+  submitting = false,
   unlimitedUntil,
 }: {
   teams: TeamInfo[];
@@ -72,6 +74,8 @@ export default function PredictionPanel({
   canDrag: boolean;
   onRevert?: () => void;
   onSubmit?: () => void;
+  submitLabel?: string;
+  submitting?: boolean;
   /** Set before kickoff: reordering is unlimited until this date. */
   unlimitedUntil?: string;
 }) {
@@ -241,6 +245,7 @@ export default function PredictionPanel({
           {onSubmit && (
             <button
               onClick={onSubmit}
+              disabled={submitting}
               style={{
                 ...styles.button,
                 flex: 1,
@@ -249,9 +254,10 @@ export default function PredictionPanel({
                 borderRadius: 16,
                 justifyContent: "center",
                 boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+                opacity: submitting ? 0.6 : 1,
               }}
             >
-              Submit Prediction to Group
+              {submitting ? "Submitting…" : submitLabel}
             </button>
           )}
         </div>

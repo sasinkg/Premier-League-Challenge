@@ -68,7 +68,7 @@ export default function LiveTablePanel({
       <PanelHeader
         title="Live Table"
         subtitle={weekLabel}
-        right={<span style={{ ...styles.pill, background: "#06402F", color: "lime" }}>● Live</span>}
+        right={<span style={{ ...styles.pill, background: "rgba(0,255,133,0.16)", color: "#00ff85", border: "1px solid rgba(0,255,133,0.34)" }}>● Live</span>}
         onToggle={isMobile ? () => setCollapsed(c => !c) : undefined}
         collapsed={isCollapsed}
       />
@@ -132,7 +132,7 @@ export default function LiveTablePanel({
 
           <div style={styles.footer}>
             <span style={{ opacity: 0.9 }}>Auto-updates weekly</span>
-            <span style={{ ...styles.pill, background: "#06402F", color: "lime" }}>Updated: just now</span>
+            <span style={{ ...styles.pill, background: "rgba(0,255,133,0.16)", color: "#00ff85", border: "1px solid rgba(0,255,133,0.34)" }}>Updated: just now</span>
           </div>
         </>
       )}

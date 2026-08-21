@@ -116,8 +116,8 @@ export default function RulesModal({ onClose }: Props) {
         <button
           onClick={handleClose}
           style={{
-            background: "rgba(120,170,255,0.85)",
-            color: "#000",
+            background: "#e90052",
+            color: "#ffffff",
             border: "none",
             borderRadius: 12,
             padding: "12px 20px",

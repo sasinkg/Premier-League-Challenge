@@ -270,7 +270,7 @@ export default function GroupFeedPage({
                 fontSize: 16,
                 borderRadius: 16,
                 justifyContent: "center",
-                boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+                boxShadow: "0 16px 40px rgba(233,0,82,0.34)",
                 opacity: submitting ? 0.6 : 1,
               }}
               onClick={handleSubmit}
@@ -334,7 +334,7 @@ export default function GroupFeedPage({
                         background: isMe
                           ? dark
                             ? "rgba(255,255,255,0.08)"
-                            : "rgba(120,170,255,0.10)"
+                            : "rgba(4,245,255,0.14)"
                           : dark
                             ? "rgba(0,0,0,0.15)"
                             : "rgba(0,0,0,0.02)",
@@ -391,8 +391,8 @@ export default function GroupFeedPage({
                               flexDirection: "column",
                               alignItems: "center",
                               justifyContent: "center",
-                              background: dark ? "rgba(120,170,255,0.12)" : "rgba(80,120,255,0.10)",
-                              border: dark ? "1px solid rgba(120,170,255,0.25)" : "1px solid rgba(80,120,255,0.20)",
+                              background: dark ? "rgba(4,245,255,0.12)" : "rgba(4,245,255,0.14)",
+                              border: dark ? "1px solid rgba(4,245,255,0.34)" : "1px solid rgba(56,0,60,0.18)",
                               borderRadius: 12,
                               padding: "6px 14px",
                               lineHeight: 1,
@@ -449,7 +449,7 @@ export default function GroupFeedPage({
                                     <span style={{ opacity: 0.5 }}>⚽</span>
                                     {p && <img src={p.teamCrest} alt={p.teamName} style={{ width: 14, height: 14, objectFit: "contain" }} />}
                                     <span style={{ opacity: 0.85 }}>{pred.tiebreakers!.topScorer}</span>
-                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "rgba(120,255,160,0.9)" : "rgba(255,120,120,0.8)" }}>{correct ? "✓ −2" : "✗"}</span>}
+                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "#00ff85" : "#e90052" }}>{correct ? "✓ −2" : "✗"}</span>}
                                   </div>
                                 );
                               })()}
@@ -462,7 +462,7 @@ export default function GroupFeedPage({
                                     <span style={{ opacity: 0.5 }}>🅰️</span>
                                     {p && <img src={p.teamCrest} alt={p.teamName} style={{ width: 14, height: 14, objectFit: "contain" }} />}
                                     <span style={{ opacity: 0.85 }}>{pred.tiebreakers!.topAssister}</span>
-                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "rgba(120,255,160,0.9)" : "rgba(255,120,120,0.8)" }}>{correct ? "✓ −2" : "✗"}</span>}
+                                    {liveTop && <span style={{ fontSize: 11, fontWeight: 700, color: correct ? "#00ff85" : "#e90052" }}>{correct ? "✓ −2" : "✗"}</span>}
                                   </div>
                                 );
                               })()}

@@ -30,8 +30,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #ffffff;
+  background-color: #38003c;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -41,7 +41,7 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #e90052;
   text-decoration: inherit;
 }
 a:hover {
@@ -52,8 +52,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #111;
-  color: white;
+  background-color: #38003c;
+  color: #ffffff;
   /* REMOVE flex + place-items */
 }
 
@@ -74,7 +74,7 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #04f5ff;
 }
 button:focus,
 button:focus-visible {
@@ -83,11 +83,11 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
+    color: #38003c;
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: #e90052;
   }
   button {
     background-color: #f9f9f9;

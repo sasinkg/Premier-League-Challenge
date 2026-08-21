@@ -348,7 +348,7 @@ export default function App() {
   const settingsDropdown = settingsOpen && (
     <>
       <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setSettingsOpen(false)} />
-      <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100, background: dark ? "#1a1a2e" : "#fff", border: dark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.12)", borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", minWidth: 180 }}>
+      <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100, background: dark ? "#38003c" : "#fff", border: dark ? "1px solid rgba(4,245,255,0.25)" : "1px solid rgba(56,0,60,0.12)", borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(56,0,60,0.34)", minWidth: 180 }}>
         <button onClick={() => { toggleTheme(); setSettingsOpen(false); }} style={dropdownItem(dark)}>
           {dark ? "☀️" : "🌙"} {dark ? "Light mode" : "Dark mode"}
         </button>
@@ -408,7 +408,9 @@ export default function App() {
         }}>
           {/* Title row — on mobile also contains icon buttons */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={styles.title}>⚽</div>
+            <div style={{ ...styles.title, fontSize: isMobile ? 18 : 24 }}>
+              Premier League Table Challenge
+            </div>
             {isMobile && iconButtons}
           </div>
 
@@ -416,8 +418,8 @@ export default function App() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
             <div style={{ fontSize: 11, opacity: 0.45, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase" }}>Your Score</div>
             <div style={{
-              background: dark ? "rgba(120,170,255,0.12)" : "rgba(80,120,255,0.10)",
-              border: dark ? "1px solid rgba(120,170,255,0.25)" : "1px solid rgba(80,120,255,0.20)",
+              background: dark ? "rgba(4,245,255,0.12)" : "rgba(4,245,255,0.14)",
+              border: dark ? "1px solid rgba(4,245,255,0.36)" : "1px solid rgba(56,0,60,0.18)",
               borderRadius: 16,
               padding: isMobile ? "6px 24px" : "8px 32px",
               lineHeight: 1,

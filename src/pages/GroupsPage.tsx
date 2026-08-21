@@ -233,7 +233,7 @@ export default function GroupsPage({
                         Code: {g.code}
                       </div>
                       {groupRanks.get(g.id) && (
-                        <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800, color: dark ? "rgba(140,190,255,0.95)" : "#2458b8" }}>
+                        <div style={{ marginTop: 4, fontSize: 13, fontWeight: 800, color: dark ? "#04f5ff" : "#e90052" }}>
                           {ordinal(groupRanks.get(g.id)!.place)} of {groupRanks.get(g.id)!.total}
                         </div>
                       )}

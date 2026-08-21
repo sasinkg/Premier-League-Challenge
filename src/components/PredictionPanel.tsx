@@ -50,8 +50,8 @@ function formatDelta(delta: number): string {
 }
 
 function getDeltaColor(delta: number): string {
-  if (delta === 0) return "rgba(120,255,160,0.90)";
-  if (delta < 0) return "rgba(120,200,255,0.90)";
+  if (delta === 0) return "#00ff85";
+  if (delta < 0) return "#04f5ff";
   return "rgba(255,120,120,0.90)";
 }
 
@@ -100,9 +100,9 @@ export default function PredictionPanel({
             style={{
               ...styles.pill,
               background:
-                unlimited || changesLeft > 0 ? "#06402F" : "rgba(255,60,60,0.15)",
+                unlimited || changesLeft > 0 ? "rgba(0,255,133,0.16)" : "rgba(233,0,82,0.16)",
               color:
-                unlimited || changesLeft > 0 ? "lime" : "rgba(255,100,100,0.9)",
+                unlimited || changesLeft > 0 ? "#00ff85" : "#e90052",
             }}
           >
             {unlimited ? "Unlimited changes" : `Changes left: ${changesLeft}`}
@@ -145,7 +145,7 @@ export default function PredictionPanel({
                           ...styles.dragRow,
                           gridTemplateColumns: "44px 24px 30px 1fr auto",
                           background: snapshot.isDragging
-                            ? "rgba(120,170,255,0.10)"
+                            ? "rgba(4,245,255,0.16)"
                             : "transparent",
                           boxShadow: snapshot.isDragging
                             ? "0 18px 40px rgba(0,0,0,0.30)"
@@ -253,7 +253,7 @@ export default function PredictionPanel({
                 fontSize: 15,
                 borderRadius: 16,
                 justifyContent: "center",
-                boxShadow: "0 16px 40px rgba(120,170,255,0.30)",
+                boxShadow: "0 16px 40px rgba(233,0,82,0.34)",
                 opacity: submitting ? 0.6 : 1,
               }}
             >

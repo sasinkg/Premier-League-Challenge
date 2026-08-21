@@ -2,8 +2,8 @@ import type React from "react";
 
 export function getStyles(dark: boolean, isMobile = false) {
   const border = dark
-    ? "1px solid rgba(255,255,255,0.08)"
-    : "1px solid rgba(0,0,0,0.08)";
+    ? "1px solid rgba(4,245,255,0.18)"
+    : "1px solid rgba(56,0,60,0.12)";
   const rowBorder = dark
     ? "1px solid rgba(255,255,255,0.06)"
     : "1px solid rgba(0,0,0,0.06)";
@@ -12,9 +12,9 @@ export function getStyles(dark: boolean, isMobile = false) {
     page: {
       minHeight: "100vh",
       background: dark
-        ? "radial-gradient(1200px 600px at 50% -10%, rgba(120,170,255,0.16), transparent 60%), #0b0d10"
-        : "radial-gradient(1200px 600px at 50% -10%, rgba(120,170,255,0.10), transparent 60%), #e8ecf4",
-      color: dark ? "#fff" : "#0b0d10",
+        ? "radial-gradient(1000px 620px at 50% -10%, rgba(233,0,82,0.34), transparent 62%), radial-gradient(760px 460px at 8% 18%, rgba(4,245,255,0.12), transparent 66%), #38003c"
+        : "radial-gradient(1000px 620px at 50% -10%, rgba(233,0,82,0.15), transparent 62%), radial-gradient(700px 440px at 8% 18%, rgba(4,245,255,0.22), transparent 66%), #ffffff",
+      color: dark ? "#fff" : "#38003c",
       fontFamily:
         'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial',
       padding: isMobile ? "16px 12px" : "28px 18px",
@@ -37,6 +37,7 @@ export function getStyles(dark: boolean, isMobile = false) {
       fontSize: 24,
       fontWeight: 900,
       letterSpacing: 0.2,
+      color: dark ? "#04f5ff" : "#38003c",
     } as React.CSSProperties,
 
     linkish: {
@@ -44,7 +45,7 @@ export function getStyles(dark: boolean, isMobile = false) {
       alignItems: "center",
       gap: 8,
       cursor: "pointer",
-      color: dark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.60)",
+      color: dark ? "#04f5ff" : "#e90052",
       fontSize: 13,
       fontWeight: 700,
       userSelect: "none",
@@ -54,14 +55,14 @@ export function getStyles(dark: boolean, isMobile = false) {
       display: "inline-flex",
       alignItems: "center",
       gap: 10,
-      background: "rgba(120,170,255,0.95)",
-      color: "#0b0d10",
+      background: "#e90052",
+      color: "#ffffff",
       border: "none",
       borderRadius: 14,
       padding: "10px 14px",
       fontWeight: 900,
       cursor: "pointer",
-      boxShadow: "0 12px 30px rgba(120,170,255,0.20)",
+      boxShadow: "0 12px 30px rgba(233,0,82,0.32)",
     } as React.CSSProperties,
 
     themeToggle: {
@@ -91,7 +92,7 @@ export function getStyles(dark: boolean, isMobile = false) {
     panel: {
       borderRadius: isMobile ? 16 : 22,
       padding: isMobile ? 12 : 16,
-      background: dark ? "rgba(10,12,16,0.60)" : "rgba(255,255,255,0.92)",
+      background: dark ? "rgba(56,0,60,0.78)" : "rgba(255,255,255,0.94)",
       border,
       boxShadow: dark
         ? "0 18px 55px rgba(0,0,0,0.45)"
